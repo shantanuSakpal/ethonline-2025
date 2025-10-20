@@ -38,6 +38,7 @@ export function summarizeAaveV3Market(markets: Market[]): AaveV3Summary[] {
           flashLoanEnabled: reserve.flashLoanEnabled,
           totalMarketSize: parseFloat(market.totalMarketSize),
           totalAvailableLiquidity: parseFloat(market.totalAvailableLiquidity),
+          marketAddress: market.supplyReserves[0].market.address,
         };
       })
     );

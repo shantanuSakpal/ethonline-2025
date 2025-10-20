@@ -51,6 +51,13 @@ export default function MarketsList() {
     fetchAaveStats();
   }, []);
 
+  const getMarketData = async () => {
+    const data = await fetch("/api/get-aave-market?marketAddress=0x123").then(
+      (res) => res.json()
+    );
+    console.log("Market data:", data.market);
+    return data.market;
+  };
   return (
     <div>
       <Card className="border-theme-blue/30">
@@ -62,6 +69,9 @@ export default function MarketsList() {
                 <div className="w-1.5 h-1.5 bg-theme-blue rounded-full"></div>
                 <p>Live</p>
               </div>
+              <button onClick={async () => await getMarketData()}>
+                get market data
+              </button>
             </div>
             <div
               className="cursor-pointer"

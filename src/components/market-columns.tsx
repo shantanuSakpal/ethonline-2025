@@ -5,6 +5,7 @@ import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { AaveV3Summary } from "@/lib/aave-v3/types";
 import Image from "next/image";
+import { SupplyMarketDialog } from "@/components/supply-dialog";
 
 export const marketsColumns: ColumnDef<AaveV3Summary>[] = [
   {
@@ -105,7 +106,25 @@ export const marketsColumns: ColumnDef<AaveV3Summary>[] = [
         TVL <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
       </Button>
     ),
-    cell: ({ row }) => `$${Intl.NumberFormat().format(row.original.tvlUSD)}`,
+    cell: ({ row }) =>
+      `$${new Intl.NumberFormat("en", {
+        notation: "compact",
+        maximumFractionDigits: 1,
+      })
+        .format(row.original.tvlUSD)
+        .toLowerCase()}`,
     sortingFn: "auto",
+  },
+  {
+    id: "actions",
+    header: () => <span className="px-2">Actions</span>,
+    cell: ({ row }) => (
+      <SupplyMarketDialog
+        marketAddress={row.original.marketAddress}
+        chainId={row.original.chainId}
+        row={row.original}
+      />
+    ),
+    enableSorting: false,
   },
 ];

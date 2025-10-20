@@ -21,4 +21,5 @@ export type AaveV3Summary = {
   flashLoanEnabled: boolean;
   totalMarketSize: number;
   totalAvailableLiquidity: number;
+  marketAddress: string;
 };
