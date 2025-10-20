@@ -16,8 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Yeild Pilot",
-  description:
-    "Yield Pilot is a platform that allows you to compare yields on Aave across chains.",
+  description: "One stop shop for yield farming cross-chain yeilds .",
 };
 
 export default function RootLayout({

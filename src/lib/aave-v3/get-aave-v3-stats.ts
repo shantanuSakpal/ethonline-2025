@@ -44,15 +44,14 @@ export const getAaveV3Stats = async (): Promise<AaveV3Summary[]> => {
 
       const summary = summarizeAaveV3Market(marketsResult.value);
 
-      // console.log(
-      //   "Aave V3 Supply Reserves filtered by supported chains ----------------------:",
-      //   summary
-      // );
-
       const filtered = filterByMinTVL(summary, MIN_TVL);
       const filteredByAPY = filterByMinAPY(filtered, MIN_APY);
+      console.log(
+        "Aave V3 Supply Reserves filtered by supported chains ----------------------:",
+        filteredByAPY
+      );
 
-      return filtered;
+      return filteredByAPY;
     } else {
       console.error("Aave V3 API error:", marketsResult.error);
       return [];

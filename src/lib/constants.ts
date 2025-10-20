@@ -20,3 +20,8 @@ export const SUPPORTED_CHAINS = {
 
 export const MIN_TVL = 1000000; // 1 million USD
 export const MIN_APY = 1; // 1%
+export const TEST_CHAINS = [
+  SUPPORTED_CHAINS.ETHEREUM,
+  SUPPORTED_CHAINS.BASE,
+  SUPPORTED_CHAINS.OPTIMISM,
+];

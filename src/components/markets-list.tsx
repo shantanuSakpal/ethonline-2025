@@ -29,22 +29,26 @@ export default function MarketsList() {
     return [...aaveStats, ...compoundStats];
   }, [protocol, aaveStats]);
 
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
+  const getAaveStats = async () => {
+    try {
       setLoading(true);
-      try {
-        const stats = await getAaveV3Stats();
-        if (mounted) setAaveStats(stats);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    })();
-    return () => {
-      mounted = false;
+      const data = await fetch("/api/get-aave-stats").then((res) => res.json());
+      console.log("Aave stats:", data.stats);
+      return data.stats;
+    } catch (e) {
+      console.error(e);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchAaveStats = async () => {
+      const stats = await getAaveStats();
+      if (stats) setAaveStats(stats);
     };
+    fetchAaveStats();
   }, []);
 
   return (
@@ -62,13 +66,8 @@ export default function MarketsList() {
             <div
               className="cursor-pointer"
               onClick={async () => {
-                setLoading(true);
-                try {
-                  const stats = await getAaveV3Stats();
-                  setAaveStats(stats);
-                } finally {
-                  setLoading(false);
-                }
+                const stats = await getAaveStats();
+                if (stats) setAaveStats(stats);
               }}
             >
               {loading ? (

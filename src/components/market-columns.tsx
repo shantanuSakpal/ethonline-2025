@@ -13,7 +13,7 @@ export const marketsColumns: ColumnDef<AaveV3Summary>[] = [
       <Button
         variant="ghost"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="px-2"
+        className="px-2 cursor-pointer"
       >
         Chain <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
       </Button>
@@ -36,7 +36,7 @@ export const marketsColumns: ColumnDef<AaveV3Summary>[] = [
       <Button
         variant="ghost"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="px-2"
+        className="px-2 cursor-pointer"
       >
         Protocol <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
       </Button>
@@ -49,7 +49,7 @@ export const marketsColumns: ColumnDef<AaveV3Summary>[] = [
       <Button
         variant="ghost"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="px-2"
+        className="px-2 cursor-pointer"
       >
         Market <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
       </Button>
@@ -82,7 +82,7 @@ export const marketsColumns: ColumnDef<AaveV3Summary>[] = [
       <Button
         variant="ghost"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="px-2"
+        className="px-2 cursor-pointer"
       >
         APY <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
       </Button>
@@ -100,7 +100,7 @@ export const marketsColumns: ColumnDef<AaveV3Summary>[] = [
       <Button
         variant="ghost"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="px-2"
+        className="px-2 cursor-pointer"
       >
         TVL <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
       </Button>

@@ -60,14 +60,14 @@ const config = createConfig(
     walletConnectProjectId: walletConnectProjectId!,
 
     // Required App Info
-    appName: "Avail Nexus",
+    appName: "Yield Pilot",
 
     // Optional App Info
-    appDescription: "Avail Nexus",
+    appDescription: "One stop shop for yield farming cross-chain yeilds",
     appUrl: "https://www.availproject.org/",
     appIcon:
       "https://www.availproject.org/_next/static/media/avail_logo.9c818c5a.png",
-  }),
+  })
 );
 const queryClient = new QueryClient();
 

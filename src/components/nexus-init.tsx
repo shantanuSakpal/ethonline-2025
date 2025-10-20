@@ -8,12 +8,17 @@ import { useAccount } from "wagmi";
 import { Button } from "./ui/button";
 import { useNexus } from "@/providers/NexusProvider";
 import { ClockFading } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const NexusInitButton = () => {
   const { status } = useAccount();
   const { handleInit, nexusSDK } = useNexus();
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleInitWithLoading = async () => {
     setLoading(true);
@@ -21,7 +26,17 @@ const NexusInitButton = () => {
     setLoading(false);
   };
 
-  if (status === "connected" && !nexusSDK?.isInitialized()) {
+  const shouldShow = useMemo(() => {
+    if (!mounted) return false;
+    if (status !== "connected") return false;
+    try {
+      return !nexusSDK?.isInitialized();
+    } catch {
+      return false;
+    }
+  }, [mounted, status, nexusSDK]);
+
+  if (shouldShow) {
     return (
       <Button onClick={handleInitWithLoading}>
         {loading ? (
