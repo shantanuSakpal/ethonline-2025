@@ -23,7 +23,7 @@ export default function Navbar() {
             </span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-6 text-sm">
+          <div className="hidden md:flex items-center gap-6 ">
             <Link
               href="/"
               className="text-muted-foreground hover:text-foreground transition-colors"
@@ -31,10 +31,10 @@ export default function Navbar() {
               Home
             </Link>
             <Link
-              href="/yeilds"
+              href="/terminal"
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
-              Yeilds
+              Terminal
             </Link>
           </div>
 

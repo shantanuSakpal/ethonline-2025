@@ -1,0 +1,24 @@
+export type AaveV3Summary = {
+  supplyTokenName: string;
+  supplyTokenSymbol: string;
+  supplyTokenLogo: string;
+  aaveWrappedTokenName: string;
+  aaveWrappedTokenSymbol: string;
+  aaveWrappedTokenLogo: string;
+  chainName: string;
+  chainId: number;
+  chainLogo: string;
+  protocolName: string;
+  protocolLogo: string;
+  apy: number;
+  tvlUSD: number;
+  canBeCollateral: boolean;
+  maxLTV: number;
+  liquidationThreshold: number;
+  liquidationBonus: number;
+  isFrozen: boolean;
+  isPaused: boolean;
+  flashLoanEnabled: boolean;
+  totalMarketSize: number;
+  totalAvailableLiquidity: number;
+};

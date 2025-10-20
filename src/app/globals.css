@@ -41,6 +41,9 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  /* Brand colors */
+  --color-theme-blue: #0742d8;
+  --color-theme-orange: #fa7001;
 }
 
 :root {
