@@ -1,4 +1,6 @@
-import React, { useCallback, useEffect, useState } from "react";
+"use client";
+
+import React, { useCallback, useMemo, useState } from "react";
 import { ethers } from "ethers";
 import {
   LogOut,
@@ -26,10 +28,6 @@ const formatAddress = (address: string | undefined) => {
 export const Wallet: React.FC = () => {
   const USDC_ON_BASE_ADDRESS = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913";
 
-  const [ethBalance, setEthBalance] = useState<string>("0");
-  const [usdcBalance, setUsdcBalance] = useState<string>("0");
-  const [isLoadingBalance, setIsLoadingBalance] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const { authInfo, logOut } = useJwtContext();
@@ -38,49 +36,51 @@ export const Wallet: React.FC = () => {
     data: usdcBalanceData,
     isError: isErrorUsdc,
     isLoading: isLoadingUsdc,
+    refetch: refetchUsdc,
   } = useBalance({
-    address: authInfo?.pkp.ethAddress as `0x${string}`,
+    address: authInfo?.pkp.ethAddress as `0x${string}` | undefined,
     chainId: base.id,
-    token: USDC_ON_BASE_ADDRESS,
+    token: USDC_ON_BASE_ADDRESS as `0x${string}`,
   });
-  console.log("usdcBalanceData", usdcBalanceData);
 
   const {
     data: ethBalanceData,
     isError: isErrorEth,
     isLoading: isLoadingEth,
+    refetch: refetchEth,
   } = useBalance({
-    address: authInfo?.pkp.ethAddress as `0x${string}`,
+    address: authInfo?.pkp.ethAddress as `0x${string}` | undefined,
     chainId: base.id,
   });
-  console.log("ethBalanceData", ethBalanceData);
 
-  // Function to fetch PKP balances
-  const fetchPkpBalance = useCallback(async () => {
-    if (!authInfo?.pkp.ethAddress) return;
-    console.log("authInfo?.pkp.ethAddress", authInfo?.pkp.ethAddress);
+  const isLoading = isLoadingEth || isLoadingUsdc;
+  const errorMsg =
+    isErrorEth || isErrorUsdc ? "Failed to fetch wallet balance" : null;
 
-    try {
-      setIsLoadingBalance(true);
-      setError(null);
+  const ethDisplay = useMemo(() => {
+    if (!ethBalanceData) return "0.000000";
+    const value = ethers.formatUnits(
+      ethBalanceData.value,
+      ethBalanceData.decimals ?? 18
+    );
+    return `${Number(value).toFixed(6)}`;
+  }, [ethBalanceData]);
+  console.log("ethbalance --- ", ethBalanceData);
+  console.log("usdcBalance --- ", usdcBalanceData);
 
-      const ethBalanceWei = ethBalanceData?.value.toString();
-      const usdcBalanceWei = usdcBalanceData?.value.toString();
-      if (isErrorUsdc || isErrorEth || !ethBalanceWei || !usdcBalanceWei)
-        return;
-      setEthBalance(ethBalanceData?.value.toString() || "0");
-      setUsdcBalance(usdcBalanceData?.value.toString() || "0");
-      setIsLoadingBalance(false);
-    } catch (err: unknown) {
-      console.error("Error fetching PKP balances:", err);
-      setError(`Failed to fetch wallet balance`);
-      setIsLoadingBalance(false);
-    }
-  }, [authInfo]);
+  const usdcDisplay = useMemo(() => {
+    if (!usdcBalanceData) return "0.00";
+    const value = ethers.formatUnits(
+      usdcBalanceData.value,
+      usdcBalanceData.decimals ?? 6
+    );
+    return `${Number(value).toFixed(2)}`;
+  }, [usdcBalanceData]);
 
-  useEffect(() => {
-    queueMicrotask(() => fetchPkpBalance());
-  }, [fetchPkpBalance]);
+  const refreshBalances = useCallback(async () => {
+    console.log("refreshing balances...");
+    await Promise.allSettled([refetchEth?.(), refetchUsdc?.()]);
+  }, [refetchEth, refetchUsdc]);
 
   const copyAddress = useCallback(async () => {
     const address = authInfo?.pkp.ethAddress;
@@ -196,9 +196,7 @@ export const Wallet: React.FC = () => {
               color: "var(--footer-text-color, #121212)",
             }}
           >
-            {isLoadingBalance
-              ? "Loading..."
-              : `${parseFloat(ethBalance).toFixed(6)} ${base.name}`}
+            {isLoading ? "Loading..." : `${ethDisplay} ${base.name}`}
           </span>
         </div>
 
@@ -226,14 +224,12 @@ export const Wallet: React.FC = () => {
               color: "var(--footer-text-color, #121212)",
             }}
           >
-            {isLoadingBalance
-              ? "Loading..."
-              : `${parseFloat(usdcBalance).toFixed(2)} USDC`}
+            {isLoading ? "Loading..." : `${usdcDisplay} USDC`}
           </span>
         </div>
       </div>
 
-      {error && (
+      {errorMsg && (
         <div
           style={{
             backgroundColor: "#fff1f0",
@@ -249,17 +245,17 @@ export const Wallet: React.FC = () => {
           <span role="img" aria-label="Error">
             ⚠️
           </span>{" "}
-          {error}
+          {errorMsg}
         </div>
       )}
 
       <div className="flex flex-col sm:flex-row gap-2">
         <Button
-          className="flex-1 min-w-0"
-          disabled={isLoadingBalance}
-          onClick={fetchPkpBalance}
+          className="flex-1 min-w-0 "
+          disabled={isLoading}
+          onClick={refreshBalances}
         >
-          {isLoadingBalance ? (
+          {isLoading ? (
             <>
               <Spinner variant="destructive" size="sm" />{" "}
               <span className="truncate">Refreshing...</span>
@@ -288,8 +284,8 @@ export const Wallet: React.FC = () => {
           <span className="truncate">Withdraw</span>
         </Button>
       </div>
-      <Button className="w-full" variant="destructive" onClick={logOut}>
-        <LogOut className="flex-shrink-0" />{" "}
+      <Button className="w-full bg-red-300 hover:bg-red-400" onClick={logOut}>
+        <LogOut className="flex-shrink-0 " />{" "}
         <span className="truncate">Log Out</span>
       </Button>
 
