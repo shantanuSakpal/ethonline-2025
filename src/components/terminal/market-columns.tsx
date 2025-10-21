@@ -5,7 +5,7 @@ import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { AaveV3Summary } from "@/lib/aave-v3/types";
 import Image from "next/image";
-import { SupplyMarketDialog } from "@/components/supply-dialog";
+import { SupplyMarketDialog } from "@/components/terminal/supply-dialog";
 
 export const marketsColumns: ColumnDef<AaveV3Summary>[] = [
   {

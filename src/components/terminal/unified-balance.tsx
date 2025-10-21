@@ -2,18 +2,18 @@ import { useNexus } from "@/providers/NexusProvider";
 import { CHAIN_METADATA, type UserAsset } from "@avail-project/nexus-core";
 import { DollarSign, Loader2 } from "lucide-react";
 import { Fragment, useEffect, useState } from "react";
-import { Label } from "./ui/label";
+import { Label } from "../ui/label";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "./ui/accordion";
-import { SelectSeparator } from "./ui/select";
+} from "../ui/accordion";
+import { SelectSeparator } from "../ui/select";
 
 const NexusUnifiedBalance = () => {
   const [unifiedBalance, setUnifiedBalance] = useState<UserAsset[] | undefined>(
-    undefined,
+    undefined
   );
   const [isLoading, setIsLoading] = useState(false);
   const { nexusSDK } = useNexus();

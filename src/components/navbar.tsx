@@ -1,6 +1,6 @@
 "use client";
 import ConnectWallet from "@/components/blocks/connect-wallet";
-import NexusInitButton from "@/components/nexus-init";
+import NexusInitButton from "@/components/terminal/nexus-init";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -35,6 +35,12 @@ export default function Navbar() {
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               Terminal
+            </Link>
+            <Link
+              href="/co-pilot"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Co-Pilot
             </Link>
           </div>
 

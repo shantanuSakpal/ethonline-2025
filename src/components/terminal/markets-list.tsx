@@ -14,7 +14,7 @@ import { Loader2, LucideRefreshCcw } from "lucide-react";
 import { getAaveV3Stats } from "@/lib/aave-v3/get-aave-v3-stats";
 import type { AaveV3Summary } from "@/lib/aave-v3/types";
 import { DataTable } from "@/components/ui/data-table";
-import { marketsColumns } from "@/components/market-columns";
+import { marketsColumns } from "@/components/terminal/market-columns";
 
 export default function MarketsList() {
   const { nexusSDK } = useNexus();
@@ -69,9 +69,6 @@ export default function MarketsList() {
                 <div className="w-1.5 h-1.5 bg-theme-blue rounded-full"></div>
                 <p>Live</p>
               </div>
-              <button onClick={async () => await getMarketData()}>
-                get market data
-              </button>
             </div>
             <div
               className="cursor-pointer"

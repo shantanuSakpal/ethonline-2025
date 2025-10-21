@@ -3,21 +3,21 @@ import {
   type SUPPORTED_CHAINS_IDS,
   type SUPPORTED_TOKENS,
 } from "@avail-project/nexus-core";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
-} from "./ui/card";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+} from "../ui/card";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 import { useState } from "react";
-import ChainSelect from "./blocks/chain-select";
-import TokenSelect from "./blocks/token-select";
+import ChainSelect from "../blocks/chain-select";
+import TokenSelect from "../blocks/token-select";
 import { useNexus } from "@/providers/NexusProvider";
-import IntentModal from "./blocks/intent-modal";
+import IntentModal from "../blocks/intent-modal";
 import { ArrowBigRight, CircleAlertIcon } from "lucide-react";
 import useListenTransaction from "@/hooks/useListenTransactions";
 

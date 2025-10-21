@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import MarketsList from "@/components/markets-list";
+import MarketsList from "@/components/terminal/markets-list";
 
 export default function Terminal() {
   return (

@@ -5,7 +5,7 @@
 "use client";
 
 import { useAccount } from "wagmi";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import { useNexus } from "@/providers/NexusProvider";
 import { ClockFading } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -29,11 +29,8 @@ const NexusInitButton = () => {
   const shouldShow = useMemo(() => {
     if (!mounted) return false;
     if (status !== "connected") return false;
-    try {
-      return !nexusSDK?.isInitialized();
-    } catch {
-      return false;
-    }
+    // Prefer derived state from context over invoking SDK methods during render
+    return !nexusSDK;
   }, [mounted, status, nexusSDK]);
 
   if (shouldShow) {
