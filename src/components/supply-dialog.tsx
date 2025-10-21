@@ -43,6 +43,7 @@ export function SupplyMarketDialog({ marketAddress, chainId, row }: Props) {
         }).toString();
         const res = await fetch(`/api/get-aave-market?${q}`);
         const json = await res.json();
+        console.log("Aave market:", json.market);
         if (!cancelled) {
           setMarket(json.market ?? null);
         }
