@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { LIT_EVM_CHAINS } from "@lit-protocol/constants";
 import { ethers } from "ethers";
+import { useBalance } from "wagmi";
 
 const ERC20_ABI = ["function balanceOf(address owner) view returns (uint256)"];
 
@@ -10,6 +11,7 @@ const USDC_CONTRACT_ADDRESSES: Record<number, string> = {
 
 export const useChain = () => {
   const [chain, setChain] = useState(LIT_EVM_CHAINS.base);
+  console.log("chain", chain);
 
   const provider = new ethers.JsonRpcProvider(chain.rpcUrls[0]);
 

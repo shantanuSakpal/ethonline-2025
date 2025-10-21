@@ -15,7 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { WalletModal } from "@/components/co-pilot/wallet-modal";
-import { useChain } from "@/hooks/useChain";
+import { useBalance } from "wagmi";
+import { base } from "wagmi/chains";
 
 const formatAddress = (address: string | undefined) => {
   if (!address) return "Loading...";
@@ -23,7 +24,8 @@ const formatAddress = (address: string | undefined) => {
 };
 
 export const Wallet: React.FC = () => {
-  const { chain, provider, usdcContract } = useChain();
+  const USDC_ON_BASE_ADDRESS = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913";
+
   const [ethBalance, setEthBalance] = useState<string>("0");
   const [usdcBalance, setUsdcBalance] = useState<string>("0");
   const [isLoadingBalance, setIsLoadingBalance] = useState<boolean>(false);
@@ -32,29 +34,49 @@ export const Wallet: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const { authInfo, logOut } = useJwtContext();
 
+  const {
+    data: usdcBalanceData,
+    isError: isErrorUsdc,
+    isLoading: isLoadingUsdc,
+  } = useBalance({
+    address: authInfo?.pkp.ethAddress as `0x${string}`,
+    chainId: base.id,
+    token: USDC_ON_BASE_ADDRESS,
+  });
+  console.log("usdcBalanceData", usdcBalanceData);
+
+  const {
+    data: ethBalanceData,
+    isError: isErrorEth,
+    isLoading: isLoadingEth,
+  } = useBalance({
+    address: authInfo?.pkp.ethAddress as `0x${string}`,
+    chainId: base.id,
+  });
+  console.log("ethBalanceData", ethBalanceData);
+
   // Function to fetch PKP balances
   const fetchPkpBalance = useCallback(async () => {
     if (!authInfo?.pkp.ethAddress) return;
+    console.log("authInfo?.pkp.ethAddress", authInfo?.pkp.ethAddress);
 
     try {
       setIsLoadingBalance(true);
       setError(null);
 
-      const [ethBalanceWei, usdcBalance] = await Promise.all([
-        provider.getBalance(authInfo?.pkp.ethAddress),
-        usdcContract.balanceOf(authInfo?.pkp.ethAddress),
-      ]);
-
-      setEthBalance(ethers.formatUnits(ethBalanceWei, 18));
-      setUsdcBalance(ethers.formatUnits(usdcBalance, 6));
-
+      const ethBalanceWei = ethBalanceData?.value.toString();
+      const usdcBalanceWei = usdcBalanceData?.value.toString();
+      if (isErrorUsdc || isErrorEth || !ethBalanceWei || !usdcBalanceWei)
+        return;
+      setEthBalance(ethBalanceData?.value.toString() || "0");
+      setUsdcBalance(usdcBalanceData?.value.toString() || "0");
       setIsLoadingBalance(false);
     } catch (err: unknown) {
       console.error("Error fetching PKP balances:", err);
       setError(`Failed to fetch wallet balance`);
       setIsLoadingBalance(false);
     }
-  }, [authInfo, provider, usdcContract]);
+  }, [authInfo]);
 
   useEffect(() => {
     queueMicrotask(() => fetchPkpBalance());
@@ -87,7 +109,7 @@ export const Wallet: React.FC = () => {
           </span>
           <div className="flex items-center gap-2">
             <a
-              href={`${chain.blockExplorerUrls[0]}/address/${authInfo?.pkp.ethAddress}`}
+              href={`${base.blockExplorers.default.url}/address/${authInfo?.pkp.ethAddress}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm underline hover:opacity-80"
@@ -147,7 +169,7 @@ export const Wallet: React.FC = () => {
                 color: "white",
               }}
             >
-              {chain.name}
+              {base.name}
             </span>
           </a>
         </div>
@@ -176,7 +198,7 @@ export const Wallet: React.FC = () => {
           >
             {isLoadingBalance
               ? "Loading..."
-              : `${parseFloat(ethBalance).toFixed(6)} ${chain.symbol}`}
+              : `${parseFloat(ethBalance).toFixed(6)} ${base.name}`}
           </span>
         </div>
 
