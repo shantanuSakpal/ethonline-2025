@@ -13,13 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, LucideRefreshCcw, ArrowUpDown } from "lucide-react";
 import type { AaveV3Summary } from "@/lib/aave-v3/types";
 import Image from "next/image";
-import {
-  ChainId,
-  chainId,
-  OrderDirection,
-  useAaveChains,
-  useAaveMarkets,
-} from "@aave/react";
+import { ChainId, OrderDirection, useAaveMarkets } from "@aave/react";
 import {
   MIN_APY,
   MIN_TVL,
@@ -45,11 +39,7 @@ export default function MarketsList() {
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const compoundStats: AaveV3Summary[] = []; // TODO: wire Compound
 
-  const {
-    data: markets,
-    loading,
-    error,
-  } = useAaveMarkets({
+  const { data: markets, loading } = useAaveMarkets({
     chainIds: AAVE_AND_AVAIL_SUPPORTED_CHAINS as ChainId[],
     suppliesOrderBy: { supplyApy: OrderDirection.Desc },
   });
@@ -79,7 +69,7 @@ export default function MarketsList() {
 
     // Sort the data
     return [...data].sort((a, b) => {
-      let aValue: any, bValue: any;
+      let aValue: string | number, bValue: string | number;
 
       switch (sortField) {
         case "chainName":
@@ -118,7 +108,7 @@ export default function MarketsList() {
 
       return 0;
     });
-  }, [protocol, aaveStats, sortField, sortDirection]);
+  }, [protocol, aaveStats, compoundStats, sortField, sortDirection]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -167,11 +157,13 @@ export default function MarketsList() {
               </label>
               <Tabs
                 value={protocol}
-                onValueChange={(v) => setProtocol(v as any)}
+                onValueChange={(v) =>
+                  setProtocol(v as "Aave" | "Compound" | "All")
+                }
                 className="w-full cursor-pointer"
               >
                 <TabsList className="w-full bg-background grid grid-cols-3 cursor-pointer">
-                  <TabsTrigger value={"All" as any} className="flex-1">
+                  <TabsTrigger value="All" className="flex-1">
                     All
                   </TabsTrigger>
                   <TabsTrigger value="Aave" className="flex-1">
