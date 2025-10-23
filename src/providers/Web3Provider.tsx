@@ -1,87 +1,155 @@
-"use client";
-import { WagmiProvider, createConfig, http } from "wagmi";
+import { NexusProvider } from "@avail-project/nexus-widgets";
+import { WagmiProvider } from "wagmi";
+import { defineChain, type Chain } from "viem";
 import {
-  mainnet,
   base,
+  polygon,
   arbitrum,
   optimism,
-  polygon,
   scroll,
   avalanche,
-  sophon,
-  kaia,
-  sepolia,
+  bsc,
   baseSepolia,
   arbitrumSepolia,
   optimismSepolia,
   polygonAmoy,
+  mainnet,
+  kaia,
+  sepolia,
 } from "wagmi/chains";
-import { ConnectKitProvider, getDefaultConfig } from "connectkit";
+
+import { createContext, useContext, useMemo, useState } from "react";
+import type { NexusNetwork } from "@avail-project/nexus-widgets";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AaveProvider } from "@aave/react";
-import { client } from "@/lib/aave-v3/aave-client";
+import "@rainbow-me/rainbowkit/styles.css";
+import {
+  darkTheme,
+  getDefaultConfig,
+  lightTheme,
+  RainbowKitProvider,
+} from "@rainbow-me/rainbowkit";
 
 const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
 
-const config = createConfig(
-  getDefaultConfig({
-    chains: [
-      mainnet,
-      base,
-      polygon,
-      arbitrum,
-      optimism,
-      scroll,
-      avalanche,
-      sophon,
-      kaia,
-      sepolia,
-      baseSepolia,
-      arbitrumSepolia,
-      optimismSepolia,
-      polygonAmoy,
-    ],
-    transports: {
-      [mainnet.id]: http(mainnet.rpcUrls.default.http[0]),
-      [arbitrum.id]: http(arbitrum.rpcUrls.default.http[0]),
-      [base.id]: http(base.rpcUrls.default.http[0]),
-      [optimism.id]: http(optimism.rpcUrls.default.http[0]),
-      [polygon.id]: http(polygon.rpcUrls.default.http[0]),
-      [avalanche.id]: http(avalanche.rpcUrls.default.http[0]),
-      [scroll.id]: http(scroll.rpcUrls.default.http[0]),
-      [sophon.id]: http(sophon.rpcUrls.default.http[0]),
-      [kaia.id]: http(kaia.rpcUrls.default.http[0]),
-      [sepolia.id]: http(sepolia.rpcUrls.default.http[0]),
-      [baseSepolia.id]: http(baseSepolia.rpcUrls.default.http[0]),
-      [arbitrumSepolia.id]: http(arbitrumSepolia.rpcUrls.default.http[0]),
-      [optimismSepolia.id]: http(optimismSepolia.rpcUrls.default.http[0]),
-      [polygonAmoy.id]: http(polygonAmoy.rpcUrls.default.http[0]),
+// Hyperliquid HyperEVM custom chain
+const hyperEVM = defineChain({
+  id: 999,
+  name: "HyperEVM",
+  nativeCurrency: { name: "HYPE", symbol: "HYPE", decimals: 18 },
+  rpcUrls: {
+    default: { http: ["https://rpc.hyperliquid.xyz/evm"] },
+  },
+  blockExplorers: {
+    default: { name: "HyperEVM Scan", url: "https://hyperevmscan.io" },
+  },
+});
+
+const sophon = defineChain({
+  id: 50104,
+  name: "Sophon",
+  nativeCurrency: {
+    decimals: 18,
+    name: "Sophon",
+    symbol: "SOPH",
+  },
+  rpcUrls: {
+    default: {
+      http: ["https://rpc.sophon.xyz"],
+      webSocket: ["wss://rpc.sophon.xyz/ws"],
     },
+  },
+  blockExplorers: {
+    default: {
+      name: "Sophon Block Explorer",
+      url: "https://explorer.sophon.xyz",
+    },
+  },
+});
 
-    walletConnectProjectId: walletConnectProjectId!,
+// Add chain icons for RainbowKit
+type RainbowKitChain = Chain & { iconUrl?: string; iconBackground?: string };
 
-    // Required App Info
-    appName: "Yield Pilot",
+const hyperEVMWithIcon: RainbowKitChain = {
+  ...hyperEVM,
+  iconUrl:
+    "https://assets.coingecko.com/coins/images/50882/standard/hyperliquid.jpg?1729431300",
+  iconBackground: "#0a3cff",
+};
 
-    // Optional App Info
-    appDescription: "One stop shop for yield farming cross-chain yields",
-    appUrl: "https://www.availproject.org/",
-    appIcon:
-      "https://www.availproject.org/_next/static/media/avail_logo.9c818c5a.png",
-  })
-);
+const sophonWithIcon: RainbowKitChain = {
+  ...sophon,
+  iconUrl:
+    "https://assets.coingecko.com/coins/images/38680/standard/sophon_logo_200.png?1747898236",
+  iconBackground: "#6b5cff",
+};
+
+const config = getDefaultConfig({
+  appName: "Avail Nexus",
+  projectId: walletConnectProjectId!,
+  chains: [
+    mainnet,
+    base,
+    polygon,
+    arbitrum,
+    optimism,
+    scroll,
+    avalanche,
+    bsc,
+    sophonWithIcon,
+    kaia,
+    hyperEVMWithIcon,
+    sepolia,
+    baseSepolia,
+    arbitrumSepolia,
+    optimismSepolia,
+    polygonAmoy,
+  ],
+});
 const queryClient = new QueryClient();
 
+interface Web3ContextValue {
+  network: NexusNetwork;
+  setNetwork: React.Dispatch<React.SetStateAction<NexusNetwork>>;
+}
+
+const Web3Context = createContext<Web3ContextValue | null>(null);
+
 const Web3Provider = ({ children }: { children: React.ReactNode }) => {
+  const [network, setNetwork] = useState<NexusNetwork>("mainnet");
+  const value = useMemo(() => ({ network, setNetwork }), [network]);
+
   return (
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        <ConnectKitProvider theme="soft" mode="light">
-          <AaveProvider client={client}>{children}</AaveProvider>
-        </ConnectKitProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+    <Web3Context.Provider value={value}>
+      <WagmiProvider config={config}>
+        <QueryClientProvider client={queryClient}>
+          <RainbowKitProvider
+            modalSize="compact"
+            theme={darkTheme({
+              accentColor: "#fe8b6c",
+              accentColorForeground: "black",
+            })}
+          >
+            <NexusProvider
+              config={{
+                debug: true,
+                network: "mainnet",
+              }}
+            >
+              {children}
+            </NexusProvider>
+          </RainbowKitProvider>
+        </QueryClientProvider>
+      </WagmiProvider>
+    </Web3Context.Provider>
   );
 };
+
+export function useWeb3Context() {
+  const context = useContext(Web3Context);
+  if (!context) {
+    throw new Error("useWeb3Context must be used within a NexusProvider");
+  }
+  return context;
+}
 
 export default Web3Provider;

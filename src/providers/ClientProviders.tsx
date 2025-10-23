@@ -5,10 +5,10 @@ const Web3Provider = dynamic(() => import("@/providers/Web3Provider"), {
   ssr: false,
 });
 
-const VincentJwtProvider = dynamic(
-  () => import("@/providers/VincentJwtProvider"),
-  { ssr: false }
-);
+// const VincentJwtProvider = dynamic(
+//   () => import("@/providers/VincentJwtProvider"),
+//   { ssr: false }
+// );
 
 export default function ClientProviders({
   children,
