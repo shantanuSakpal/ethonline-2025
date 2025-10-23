@@ -1,6 +1,6 @@
 "use client";
 
-import { SUPPORTED_CHAINS, supportedChains } from "@/lib/constants";
+import { supportedChains } from "@/lib/constants";
 import Image from "next/image";
 import useSWR from "swr";
 

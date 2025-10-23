@@ -10,21 +10,30 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import type { AaveV3Summary } from "@/lib/aave-v3/types";
-import { ChainId } from "@aave/react";
+import {
+  BridgeAndExecuteButton,
+  EthereumProvider,
+  SUPPORTED_CHAINS_IDS,
+  SUPPORTED_TOKENS,
+  TOKEN_CONTRACT_ADDRESSES,
+  TOKEN_METADATA,
+  useNexus,
+} from "@avail-project/nexus-widgets";
+import { parseUnits } from "viem";
+import { useAccount } from "wagmi";
+import ViewUnifiedBalance from "@/components/nexus/view-balance";
 
 type Props = {
-  marketAddress: string;
-  chainId: ChainId;
   row: AaveV3Summary;
 };
 
-export function SupplyMarketDialog({ marketAddress, chainId, row }: Props) {
+export function SupplyMarketDialog({ row }: Props) {
   const [open, setOpen] = useState(false);
-  const [amountUsd, setAmountUsd] = useState<string>("");
+  const { initializeSdk, isSdkInitialized } = useNexus();
+  const [loading, setLoading] = useState(false);
+  const { isConnected, isDisconnected, status, connector } = useAccount();
   // console.log(row);
   const compactUsd = (n: number) =>
     `$${new Intl.NumberFormat("en", {
@@ -35,6 +44,26 @@ export function SupplyMarketDialog({ marketAddress, chainId, row }: Props) {
       .toLowerCase()}`;
 
   const disabled = row.isPaused || row.isFrozen;
+
+  const handleInitializeSDK = async () => {
+    if (isSdkInitialized) return;
+    setLoading(true);
+    try {
+      await initializeSdk();
+    } catch (error) {
+      console.error("Unable to initialize SDK:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const widgetButtonClick = async (onClick: () => void) => {
+    console.log("row", row);
+    if (!isSdkInitialized) {
+      await handleInitializeSDK();
+    }
+    onClick();
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -65,11 +94,11 @@ export function SupplyMarketDialog({ marketAddress, chainId, row }: Props) {
                 className="w-7 h-7 rounded-full -ml-2 ring-2 ring-background"
               />
             )}
-            <div className="min-w-0">
+            <div className="min-w-0 flex flex-col items-start">
               <DialogTitle className="flex items-center gap-2 truncate">
                 <span>Supply {row.supplyTokenSymbol}</span>
                 <span className="text-xs text-muted-foreground">on</span>
-                <span className="rounded-md bg-muted/40 px-2 py-0.5 text-xs">
+                <span className="rounded-md bg-muted/40 px-2 py-0.5 text">
                   {row.chainName}
                 </span>
               </DialogTitle>
@@ -84,18 +113,18 @@ export function SupplyMarketDialog({ marketAddress, chainId, row }: Props) {
 
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3 text-sm">
-            <div className="rounded-md border p-3">
+            <div className="rounded-md border border-zinc-600 p-3">
               <div className="text-muted-foreground">APY</div>
               <div className="mt-1 font-semibold text-theme-orange">
                 {row.apy.toFixed(2)}%
               </div>
             </div>
-            <div className="rounded-md border p-3">
+            <div className="rounded-md border border-zinc-600 p-3">
               <div className="text-muted-foreground">TVL</div>
               <div className="mt-1 font-semibold">{compactUsd(row.tvlUSD)}</div>
             </div>
 
-            <div className="rounded-md border p-3 col-span-2">
+            <div className="rounded-md border border-zinc-600 p-3 col-span-2">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <div className="text-muted-foreground text-xs">
@@ -118,37 +147,79 @@ export function SupplyMarketDialog({ marketAddress, chainId, row }: Props) {
           </div>
 
           <Separator />
-
-          <div className="space-y-2">
-            <Label htmlFor="amountUsd">Amount (USD)</Label>
-            <div className="relative">
-              <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                $
-              </div>
-              <Input
-                id="amountUsd"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                className="pl-7"
-                value={amountUsd}
-                onChange={(e) => setAmountUsd(e.target.value)}
-              />
-            </div>
-          </div>
         </div>
 
-        <DialogFooter>
-          <Button
-            onClick={() => {
-              console.log("Supply", { marketAddress, chainId, amountUsd });
-            }}
-            disabled={disabled || !amountUsd || Number(amountUsd) <= 0}
-          >
-            Supply
-          </Button>
-        </DialogFooter>
+        <div className="w-full flex justify-center">
+          {isConnected && (
+            <BridgeAndExecuteButton
+              className="w-full"
+              contractAddress={row.marketAddress}
+              contractAbi={
+                [
+                  {
+                    inputs: [
+                      {
+                        internalType: "address",
+                        name: "asset",
+                        type: "address",
+                      },
+                      {
+                        internalType: "uint256",
+                        name: "amount",
+                        type: "uint256",
+                      },
+                      {
+                        internalType: "address",
+                        name: "onBehalfOf",
+                        type: "address",
+                      },
+                      {
+                        internalType: "uint16",
+                        name: "referralCode",
+                        type: "uint16",
+                      },
+                    ],
+                    name: "supply",
+                    outputs: [],
+                    stateMutability: "nonpayable",
+                    type: "function",
+                  },
+                ] as const
+              }
+              functionName="supply"
+              buildFunctionParams={(token, amount, _chainId, user) => {
+                const decimals = TOKEN_METADATA[token].decimals;
+                const amountWei = parseUnits(amount, decimals);
+                const tokenAddr = TOKEN_CONTRACT_ADDRESSES[token][_chainId];
+                return { functionParams: [tokenAddr, amountWei, user, 0] };
+              }}
+              prefill={{
+                toChainId: row.chainId as SUPPORTED_CHAINS_IDS,
+                token: row.supplyTokenSymbol as SUPPORTED_TOKENS,
+              }}
+            >
+              {({ onClick, isLoading }) => (
+                <Button
+                  onClick={() => widgetButtonClick(onClick)}
+                  disabled={isLoading || loading}
+                  className="w-full font-bold rounded-lg"
+                >
+                  {loading
+                    ? "Initializing..."
+                    : isLoading
+                    ? "Processing…"
+                    : "Bridge & Stake"}
+                </Button>
+              )}
+            </BridgeAndExecuteButton>
+          )}
+
+          {isDisconnected && (
+            <div className="text-center text-sm text-muted-foreground">
+              Please connect your wallet to supply
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

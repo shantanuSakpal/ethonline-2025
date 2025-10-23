@@ -28,6 +28,8 @@ import {
   lightTheme,
   RainbowKitProvider,
 } from "@rainbow-me/rainbowkit";
+import { AaveProvider } from "@aave/react";
+import { client } from "@/lib/aave-v3/aave-client";
 
 const walletConnectProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
 
@@ -120,26 +122,27 @@ const Web3Provider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <Web3Context.Provider value={value}>
-      <WagmiProvider config={config}>
-        <QueryClientProvider client={queryClient}>
-          <RainbowKitProvider
-            modalSize="compact"
-            theme={darkTheme({
-              accentColor: "#fe8b6c",
-              accentColorForeground: "black",
-            })}
-          >
-            <NexusProvider
-              config={{
-                debug: true,
-                network: "mainnet",
-              }}
+      <NexusProvider
+        config={{
+          debug: true,
+          network: "mainnet",
+        }}
+      >
+        <WagmiProvider config={config}>
+          <QueryClientProvider client={queryClient}>
+            <RainbowKitProvider
+              modalSize="compact"
+              theme={darkTheme({
+                accentColor: "#0742d8",
+                accentColorForeground: "white",
+                borderRadius: "medium",
+              })}
             >
-              {children}
-            </NexusProvider>
-          </RainbowKitProvider>
-        </QueryClientProvider>
-      </WagmiProvider>
+              <AaveProvider client={client}>{children}</AaveProvider>
+            </RainbowKitProvider>
+          </QueryClientProvider>
+        </WagmiProvider>
+      </NexusProvider>
     </Web3Context.Provider>
   );
 };

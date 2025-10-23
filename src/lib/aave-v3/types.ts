@@ -2,6 +2,7 @@ export type AaveV3Summary = {
   supplyTokenName: string;
   supplyTokenSymbol: string;
   supplyTokenLogo: string;
+  supplyTokenAddress: `0x${string}`;
   aaveWrappedTokenName: string;
   aaveWrappedTokenSymbol: string;
   aaveWrappedTokenLogo: string;
@@ -21,5 +22,5 @@ export type AaveV3Summary = {
   flashLoanEnabled: boolean;
   totalMarketSize: number;
   totalAvailableLiquidity: number;
-  marketAddress: string;
+  marketAddress: `0x${string}`;
 };

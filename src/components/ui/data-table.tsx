@@ -30,7 +30,7 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="overflow-hidden rounded-lg border">
+    <div className="overflow-hidden rounded-lg border border-zinc-800">
       <table className="w-full text-sm">
         <thead className="bg-background/50">
           {table.getHeaderGroups().map((headerGroup) => (
@@ -50,7 +50,7 @@ export function DataTable<TData, TValue>({
         </thead>
         <tbody>
           {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="border-t">
+            <tr key={row.id} className="border-t border-zinc-800">
               {row.getVisibleCells().map((cell) => (
                 <td key={cell.id} className="px-4 py-3">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}

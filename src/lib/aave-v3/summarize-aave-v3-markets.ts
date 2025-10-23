@@ -19,6 +19,7 @@ export function summarizeAaveV3Market(markets: Market[]): AaveV3Summary[] {
           supplyTokenName: supplyToken.name,
           supplyTokenSymbol: supplyToken.symbol,
           supplyTokenLogo: supplyToken.imageUrl,
+          supplyTokenAddress: supplyToken.address,
           aaveWrappedTokenName: aaveWrappedToken.name,
           aaveWrappedTokenSymbol: aaveWrappedToken.symbol,
           aaveWrappedTokenLogo: aaveWrappedToken.imageUrl,
