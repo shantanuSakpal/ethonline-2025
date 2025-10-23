@@ -25,3 +25,6 @@ export const TEST_CHAINS = [
   SUPPORTED_CHAINS.BASE,
   SUPPORTED_CHAINS.OPTIMISM,
 ];
+
+export type ChainChoice = "ethereum" | "base" | "optimism";
+export const supportedChains = ["ethereum", "base", "optimism"];

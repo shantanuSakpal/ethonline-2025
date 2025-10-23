@@ -1,5 +1,4 @@
 import { AaveV3Summary } from "@/lib/aave-v3/types";
-import { Market } from "@aave/client";
 
 export const filterByMinTVL = (
   markets: AaveV3Summary[],

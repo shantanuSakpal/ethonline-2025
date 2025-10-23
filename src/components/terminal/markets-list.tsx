@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, LucideRefreshCcw } from "lucide-react";
-import { getAaveV3Stats } from "@/lib/aave-v3/get-aave-v3-stats";
 import type { AaveV3Summary } from "@/lib/aave-v3/types";
 import { DataTable } from "@/components/ui/data-table";
 import { marketsColumns } from "@/components/terminal/market-columns";

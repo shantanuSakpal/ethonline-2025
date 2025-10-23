@@ -42,6 +42,12 @@ export default function Navbar() {
             >
               Co-Pilot
             </Link>
+            <Link
+              href="/portfolio"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Portfolio
+            </Link>
           </div>
 
           <div className="flex items-center gap-3">

@@ -12,6 +12,7 @@ import { Chain, ChainId, chainId, OrderDirection } from "@aave/client";
 import { chains, markets } from "@aave/client/actions";
 import { filterByMinTVL } from "@/lib/aave-v3/filter-by-min-tvl";
 import { filterByMinAPY } from "@/lib/aave-v3/filter-by-min-apy";
+import { filterByTokens } from "@/lib/aave-v3/filter-by-tokens";
 
 export const getAaveStats = async (): Promise<AaveV3Summary[]> => {
   try {
@@ -50,12 +51,17 @@ export const getAaveStats = async (): Promise<AaveV3Summary[]> => {
 
       const filtered = filterByMinTVL(summary, MIN_TVL);
       const filteredByAPY = filterByMinAPY(filtered, MIN_APY);
+      const filteredByTokens = filterByTokens(filteredByAPY, [
+        "USDC",
+        "USDT",
+        "ETH",
+      ]);
       // console.log(
       //   "Aave V3 Supply Reserves filtered by supported chains ----------------------:",
       //   filteredByAPY.length
       // );
 
-      return filteredByAPY;
+      return filteredByTokens;
     } else {
       console.error("Aave V3 API error:", marketsResult.error);
       return [];
