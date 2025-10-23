@@ -14,13 +14,49 @@ import { Loader2, LucideRefreshCcw } from "lucide-react";
 import type { AaveV3Summary } from "@/lib/aave-v3/types";
 import { DataTable } from "@/components/ui/data-table";
 import { marketsColumns } from "@/components/terminal/market-columns";
+import {
+  ChainId,
+  chainId,
+  OrderDirection,
+  useAaveChains,
+  useAaveMarkets,
+} from "@aave/react";
+import { MIN_APY, MIN_TVL, TEST_CHAINS } from "@/lib/constants";
+import { filterByTokens } from "@/lib/aave-v3/filter-by-tokens";
+import { filterByMinAPY } from "@/lib/aave-v3/filter-by-min-apy";
+import { filterByMinTVL } from "@/lib/aave-v3/filter-by-min-tvl";
+import { summarizeAaveV3Market } from "@/lib/aave-v3/summarize-aave-v3-markets";
 
 export default function MarketsList() {
   const { nexusSDK } = useNexus();
   const [protocol, setProtocol] = useState<"Aave" | "Compound" | "All">("All");
-  const [loading, setLoading] = useState(false);
   const [aaveStats, setAaveStats] = useState<AaveV3Summary[]>([]);
   const compoundStats: AaveV3Summary[] = []; // TODO: wire Compound
+
+  const {
+    data: markets,
+    loading,
+    error,
+  } = useAaveMarkets({
+    chainIds: TEST_CHAINS as ChainId[],
+    suppliesOrderBy: { supplyApy: OrderDirection.Desc },
+  });
+
+  useEffect(() => {
+    if (markets) {
+      console.log("markets", markets);
+      const summary = summarizeAaveV3Market(markets);
+
+      const filtered = filterByMinTVL(summary, MIN_TVL);
+      const filteredByAPY = filterByMinAPY(filtered, MIN_APY);
+      const filteredByTokens = filterByTokens(filteredByAPY, [
+        "USDC",
+        "USDT",
+        "ETH",
+      ]);
+      setAaveStats(filteredByTokens);
+    }
+  }, [markets]);
 
   const displayData = useMemo(() => {
     if (protocol === "Aave") return aaveStats;
@@ -28,35 +64,6 @@ export default function MarketsList() {
     return [...aaveStats, ...compoundStats];
   }, [protocol, aaveStats]);
 
-  const getAaveStats = async () => {
-    try {
-      setLoading(true);
-      const data = await fetch("/api/get-aave-stats").then((res) => res.json());
-      console.log("Aave stats:", data.stats);
-      return data.stats;
-    } catch (e) {
-      console.error(e);
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    const fetchAaveStats = async () => {
-      const stats = await getAaveStats();
-      if (stats) setAaveStats(stats);
-    };
-    fetchAaveStats();
-  }, []);
-
-  const getMarketData = async () => {
-    const data = await fetch("/api/get-aave-market?marketAddress=0x123").then(
-      (res) => res.json()
-    );
-    console.log("Market data:", data.market);
-    return data.market;
-  };
   return (
     <div>
       <Card className="border-theme-blue/30">
@@ -72,8 +79,8 @@ export default function MarketsList() {
             <div
               className="cursor-pointer"
               onClick={async () => {
-                const stats = await getAaveStats();
-                if (stats) setAaveStats(stats);
+                // const stats = await getAaveStats();
+                // if (stats) setAaveStats(stats);
               }}
             >
               {loading ? (

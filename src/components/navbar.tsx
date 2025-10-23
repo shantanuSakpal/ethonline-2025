@@ -36,12 +36,12 @@ export default function Navbar() {
             >
               Terminal
             </Link>
-            <Link
+            {/* <Link
               href="/co-pilot"
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               Co-Pilot
-            </Link>
+            </Link> */}
             <Link
               href="/portfolio"
               className="text-muted-foreground hover:text-foreground transition-colors"

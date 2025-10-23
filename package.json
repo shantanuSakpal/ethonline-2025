@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@aave/client": "^0.7.0",
+    "@aave/react": "^0.7.0",
     "@avail-project/nexus-core": "^0.0.1",
     "@lit-protocol/auth-helpers": "^8.1.0",
     "@lit-protocol/constants": "^8.0.3",

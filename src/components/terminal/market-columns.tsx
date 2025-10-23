@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import type { AaveV3Summary } from "@/lib/aave-v3/types";
 import Image from "next/image";
 import { SupplyMarketDialog } from "@/components/terminal/supply-dialog";
+import { ChainId } from "@aave/react";
 
 export const marketsColumns: ColumnDef<AaveV3Summary>[] = [
   {
@@ -121,7 +122,7 @@ export const marketsColumns: ColumnDef<AaveV3Summary>[] = [
     cell: ({ row }) => (
       <SupplyMarketDialog
         marketAddress={row.original.marketAddress}
-        chainId={row.original.chainId}
+        chainId={row.original.chainId as ChainId}
         row={row.original}
       />
     ),

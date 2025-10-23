@@ -17,7 +17,9 @@ export default function ClientProviders({
 }) {
   return (
     <Web3Provider>
-      <VincentJwtProvider>{children}</VincentJwtProvider>
+      {/* <VincentJwtProvider> */}
+      {children}
+      {/* </VincentJwtProvider> */}
     </Web3Provider>
   );
 }
