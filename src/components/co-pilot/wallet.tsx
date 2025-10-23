@@ -79,7 +79,10 @@ export const Wallet: React.FC = () => {
 
   const refreshBalances = useCallback(async () => {
     console.log("refreshing balances...");
-    await Promise.allSettled([refetchEth?.(), refetchUsdc?.()]);
+    await Promise.allSettled([
+      refetchEth?.() as Promise<unknown>,
+      refetchUsdc?.() as Promise<unknown>,
+    ]);
   }, [refetchEth, refetchUsdc]);
 
   const copyAddress = useCallback(async () => {
