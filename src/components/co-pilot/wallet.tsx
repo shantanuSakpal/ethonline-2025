@@ -95,7 +95,7 @@ export const Wallet: React.FC = () => {
   }, [authInfo?.pkp.ethAddress]);
 
   return (
-    <div data-test-id="wallet" className="w-full space-y-4">
+    <div data-test-id="wallet" className="w-full space-y-4 text-white">
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <span

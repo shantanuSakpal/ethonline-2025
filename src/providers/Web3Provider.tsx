@@ -63,7 +63,7 @@ const config = createConfig(
     appName: "Yield Pilot",
 
     // Optional App Info
-    appDescription: "One stop shop for yield farming cross-chain yeilds",
+    appDescription: "One stop shop for yield farming cross-chain yields",
     appUrl: "https://www.availproject.org/",
     appIcon:
       "https://www.availproject.org/_next/static/media/avail_logo.9c818c5a.png",

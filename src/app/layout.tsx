@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Yeild Pilot",
-  description: "One stop shop for yield farming cross-chain yeilds .",
+  title: "Yield Pilot",
+  description: "One stop shop for yield farming cross-chain yields .",
 };
 
 export default function RootLayout({

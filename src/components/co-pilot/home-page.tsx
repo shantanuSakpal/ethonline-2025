@@ -13,7 +13,7 @@ export default function HomePage() {
   return (
     <main className="relative px-4 sm:px-6 md:px-8 flex justify-center pt-8 sm:pt-16 md:pt-24 pb-8 max-w-2xl mx-auto">
       <div className="w-full max-w-4xl mx-auto">
-        <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-6 shadow-sm w-full">
+        <div className="bg-zinc-100 text-white border border-gray-200 rounded-2xl p-4 sm:p-6 shadow-sm w-full">
           <PageHeader
             title="Aave yield agent"
             subtitle="Automated yield strategies for your crypto."
