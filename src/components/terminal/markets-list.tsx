@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useNexus } from "@/providers/NexusProvider";
 import {
   Card,
   CardContent,
@@ -28,7 +27,6 @@ import { filterByMinTVL } from "@/lib/aave-v3/filter-by-min-tvl";
 import { summarizeAaveV3Market } from "@/lib/aave-v3/summarize-aave-v3-markets";
 
 export default function MarketsList() {
-  const { nexusSDK } = useNexus();
   const [protocol, setProtocol] = useState<"Aave" | "Compound" | "All">("All");
   const [aaveStats, setAaveStats] = useState<AaveV3Summary[]>([]);
   const compoundStats: AaveV3Summary[] = []; // TODO: wire Compound

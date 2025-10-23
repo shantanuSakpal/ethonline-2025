@@ -1,6 +1,4 @@
 "use client";
-import ConnectWallet from "@/components/blocks/connect-wallet";
-import NexusInitButton from "@/components/terminal/nexus-init";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -50,12 +48,7 @@ export default function Navbar() {
             </Link>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex gap-x-3 items-center justify-center">
-              <ConnectWallet />
-              <NexusInitButton />
-            </div>
-          </div>
+          <div className="flex items-center gap-3"></div>
         </div>
       </div>
     </nav>

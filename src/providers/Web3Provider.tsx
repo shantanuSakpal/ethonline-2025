@@ -18,7 +18,6 @@ import {
 } from "wagmi/chains";
 import { ConnectKitProvider, getDefaultConfig } from "connectkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import NexusProvider from "./NexusProvider";
 import { AaveProvider } from "@aave/react";
 import { client } from "@/lib/aave-v3/aave-client";
 
@@ -78,9 +77,7 @@ const Web3Provider = ({ children }: { children: React.ReactNode }) => {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <ConnectKitProvider theme="soft" mode="light">
-          <NexusProvider>
-            <AaveProvider client={client}>{children}</AaveProvider>
-          </NexusProvider>
+          <AaveProvider client={client}>{children}</AaveProvider>
         </ConnectKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
