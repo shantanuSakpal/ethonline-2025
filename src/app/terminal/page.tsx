@@ -86,7 +86,7 @@ export default function Terminal() {
       </Card>
 
       <div
-        className="bg-card rounded-lg border border-gray-400 p-6 shadow-sm text-center w-3/4"
+        className="bg-card rounded-lg border border-gray-400 p-6 shadow-sm text-center w-3/4 hidden"
         key={"usdc-aave"}
       >
         <h3 className="text-lg font-semibold mb-4">
