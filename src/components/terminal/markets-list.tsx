@@ -64,7 +64,9 @@ export default function MarketsList() {
     data = data
       .filter((m) => m.tvlUSD >= MIN_TVL)
       .filter((m) => m.apy >= MIN_APY)
-      .filter((m) => ["USDC", "USDT", "ETH"].includes(m.supplyTokenSymbol));
+      .filter((m) => ["USDC", "USDT"].includes(m.supplyTokenSymbol));
+
+    // console.log("data --- ", data);
 
     // apply sorting
     return [...data].sort((a, b) => {

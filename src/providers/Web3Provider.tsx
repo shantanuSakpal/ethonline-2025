@@ -134,7 +134,7 @@ const Web3Provider = ({ children }: { children: React.ReactNode }) => {
               modalSize="compact"
               theme={darkTheme({
                 accentColor: "#0742d8",
-                accentColorForeground: "black",
+                accentColorForeground: "white",
                 borderRadius: "medium",
               })}
             >

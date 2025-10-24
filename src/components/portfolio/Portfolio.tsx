@@ -12,8 +12,8 @@ export const fetcher = (url: string) => fetch(url).then((r) => r.json());
 type TabKey = "tokens" | "protocols";
 
 const Tabs: { key: TabKey; label: string }[] = [
-  { key: "tokens", label: "Tokens" },
   { key: "protocols", label: "Protocols" },
+  { key: "tokens", label: "Tokens" },
 ];
 
 // Lazy-load each section so we don’t even ship their code until needed.
@@ -40,7 +40,7 @@ export default function Portfolio() {
   const { address, isConnecting, isDisconnected } = useAccount();
 
   // Default to "tokens"; you can also restore from URL hash if you want.
-  const [active, setActive] = useState<TabKey>("tokens");
+  const [active, setActive] = useState<TabKey>("protocols");
   const [chain, setChain] = useState<ChainChoice>("base");
 
   // Render just the active pane (so only that component mounts & fetches).
@@ -50,7 +50,7 @@ export default function Portfolio() {
       case "tokens":
         return <TokensSection address={address} chain={chain} />;
       case "protocols":
-        return <ProtocolList address={address} chain={chain} />;
+        return <ProtocolList address={address} />;
 
       default:
         return null;

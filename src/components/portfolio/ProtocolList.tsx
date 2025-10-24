@@ -5,6 +5,7 @@ import { ComplexProtocol } from "@/app/api/portfolio/protocols/route";
 import { ProtocolDetails } from "./protocol/ProtocolDetails";
 import { fetcher } from "@/components/portfolio/Portfolio";
 import dynamic from "next/dynamic";
+import UserAaveSupplies from "@/components/portfolio/UserAaveSupplies";
 
 export default function ProtocolList({ address }: { address: string }) {
   // Protocols
@@ -18,33 +19,7 @@ export default function ProtocolList({ address }: { address: string }) {
   return (
     <div className="flex flex-col gap-6">
       {/* Protocols section */}
-      <section>
-        <h3 className="text-sm font-medium text-zinc-800 dark:text-zinc-200 mb-2">
-          Protocols
-        </h3>
-
-        {isLoading && (
-          <div className="py-2 text-sm text-gray-400">Loading protocols...</div>
-        )}
-
-        {error && (
-          <div className="py-2 text-sm text-red-500">
-            Failed to load protocols.
-          </div>
-        )}
-
-        {!isLoading && !error && (
-          <div>
-            {protocols.length === 0 ? (
-              <div className="py-2 text-sm text-zinc-500 dark:text-zinc-400">
-                No protocol data.
-              </div>
-            ) : (
-              protocols.map((p) => <ProtocolDetails key={p.id} protocol={p} />)
-            )}
-          </div>
-        )}
-      </section>
+      <UserAaveSupplies />
     </div>
   );
 }
