@@ -20,6 +20,7 @@ import {
 } from "wagmi";
 import { bigDecimal, evmAddress, useAaveMarket } from "@aave/react";
 import { Label } from "@/components/ui/label";
+import { toast } from "react-toastify";
 
 // ABI for token approval
 const erc20Abi = [
@@ -179,6 +180,7 @@ export default function WithdrawDialog({ isOpen, onClose, position }: any) {
         args: [approval.spender, BigInt(approval.amount)],
       });
       setApprovalSuccess(true);
+      toast.success(`Approval successful. Click "Withdraw Tokens" to proceed.`);
     } catch (err: any) {
       if (err?.message?.includes("User rejected")) {
         console.log({ "user rejected approval": err });
@@ -200,6 +202,7 @@ export default function WithdrawDialog({ isOpen, onClose, position }: any) {
         data: route.tx.data as `0x${string}`,
       });
       setWithdrawSuccess(true);
+      toast.success(`Withdraw successful on ${chainId}.`);
       console.log(`Withdraw successful on ${chainId}.`);
       // close the dialog
       onClose();
@@ -297,7 +300,7 @@ export default function WithdrawDialog({ isOpen, onClose, position }: any) {
         {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
         {approvalSuccess && !withdrawSuccess && (
           <p className="mt-2 text-blue-400 text-sm">
-            Token approved. You can now withdraw.
+            Token approved. Click on "Withdraw Tokens" to withdraw.
           </p>
         )}
         {withdrawSuccess && (
