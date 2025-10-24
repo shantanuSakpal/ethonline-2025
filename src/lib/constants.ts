@@ -14,5 +14,23 @@ export const AAVE_AND_AVAIL_SUPPORTED_CHAINS = [
   SUPPORTED_CHAINS.SCROLL, // 534352
 ];
 
-export type ChainChoice = "ethereum" | "base" | "optimism";
-export const supportedChains = ["ethereum", "base", "optimism"];
+export type ChainChoice =
+  | "eth"
+  | "base"
+  | "op"
+  | "matic"
+  | "arb"
+  | "avax"
+  | "bnb"
+  | "scrl";
+
+export const supportedChains = [
+  "eth",
+  "base",
+  "op",
+  "matic",
+  "arb",
+  "avax",
+  "bnb",
+  "scrl",
+];

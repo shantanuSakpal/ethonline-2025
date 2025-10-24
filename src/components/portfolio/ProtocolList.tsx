@@ -6,16 +6,10 @@ import { ProtocolDetails } from "./protocol/ProtocolDetails";
 import { fetcher } from "@/components/portfolio/Portfolio";
 import dynamic from "next/dynamic";
 
-export default function ProtocolList({
-  address,
-  chain,
-}: {
-  address: string;
-  chain: string;
-}) {
+export default function ProtocolList({ address }: { address: string }) {
   // Protocols
   const { data, error, isLoading } = useSWR<{ complex: ComplexProtocol[] }>(
-    `/api/portfolio/protocols?address=${address}&chain=${chain}`,
+    `/api/portfolio/protocols?address=${address}`,
     fetcher
   );
 

@@ -70,12 +70,23 @@ export interface ComplexProtocol {
   portfolio_item_list: PortfolioItem[];
 }
 
+const supportedChains = [
+  "eth",
+  "base",
+  "op",
+  "matic",
+  "arb",
+  "avax",
+  "bnb",
+  "scrl",
+];
+
 async function fetchComplexProtocols(
-  walletAddress: string,
-  chain: string
+  walletAddress: string
 ): Promise<ComplexProtocol[]> {
-  const chainParam = chain;
-  const url = `${DEBANK_API_BASE_URL}/user/complex_protocol_list?id=${walletAddress}&chain_id=${chainParam}`;
+  const chainParam = supportedChains.join(",");
+
+  const url = `${DEBANK_API_BASE_URL}/user/all_complex_protocol_list?id=${walletAddress}&chain_ids=${chainParam}`;
   const res = await fetch(url, {
     headers: { AccessKey: DEBANK_API_KEY },
     cache: "no-store",
@@ -101,19 +112,18 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url);
   const address = searchParams.get("address");
-  const chain = searchParams.get("chain") || "";
 
   if (!address) {
     console.log("missing address");
     return NextResponse.json({ error: "Missing address" }, { status: 400 });
   }
-  console.log("fetching protocols stats for ", address, chain);
+  console.log("fetching protocols stats for ", address);
   if (!isAddress(address)) {
     return NextResponse.json({ error: "Invalid address" }, { status: 400 });
   }
 
   try {
-    const complexProtocols = await fetchComplexProtocols(address, chain);
+    const complexProtocols = await fetchComplexProtocols(address);
     return NextResponse.json({ complex: complexProtocols });
   } catch (err) {
     console.error("Error fetching complex protocols:", err);
