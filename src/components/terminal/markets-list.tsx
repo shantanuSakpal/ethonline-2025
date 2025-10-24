@@ -97,8 +97,83 @@ export default function MarketsList() {
     }
   };
 
+  // find top APY market
+  const topMarket = useMemo(() => {
+    if (!displayData.length) return null;
+    return [...displayData].sort((a, b) => b.apy - a.apy)[0];
+  }, [displayData]);
+
   return (
     <div>
+      {topMarket && (
+        <Card className="mb-6 border border-theme-blue/40 bg-gradient-to-br from-theme-blue/10 to-transparent w-fit">
+          <CardContent className="px-6 py-5 flex flex-col items-center text-center gap-3">
+            <div className="border-theme-orange border text-theme-orange text-xs px-2 py-1 rounded-full bg-theme-orange/10 mb-2">
+              Top Yield Opportunity
+            </div>
+            {/* Headline */}
+            <div className="flex items-center gap-2">
+              {topMarket.supplyTokenLogo && (
+                <Image
+                  src={topMarket.supplyTokenLogo}
+                  alt={topMarket.supplyTokenSymbol}
+                  width={28}
+                  height={28}
+                  className="rounded-full"
+                />
+              )}
+              <div className="flex items-center gap-2">
+                {topMarket.supplyTokenSymbol}
+                <span className="text-sm ">on</span>
+                <Image
+                  src={topMarket.chainLogo}
+                  alt={topMarket.chainName}
+                  width={28}
+                  height={28}
+                  className="rounded-full"
+                />
+                <span className="">{topMarket.chainName}</span>
+              </div>
+            </div>
+
+            {/* APY Highlight */}
+            <p className="text-3xl font-bold text-theme-orange">
+              {topMarket.apy.toFixed(2)}% APY
+            </p>
+
+            {/* Stats Row */}
+            <div className="flex gap-6 text-sm text-zinc-400">
+              <p>
+                TVL:{" "}
+                <span className="text-white font-medium">
+                  $
+                  {new Intl.NumberFormat("en", { notation: "compact" }).format(
+                    topMarket.tvlUSD
+                  )}
+                </span>
+              </p>
+              <p>
+                Liquidity:{" "}
+                <span className="text-white font-medium">
+                  $
+                  {new Intl.NumberFormat("en", { notation: "compact" }).format(
+                    topMarket.totalAvailableLiquidity || 0
+                  )}
+                </span>
+              </p>
+            </div>
+
+            {/* Supply Button */}
+            <div className="relative mt-2 group">
+              <div className="absolute -inset-1 bg-theme-blue/40 blur-md rounded-lg opacity-70 group-hover:opacity-100 transition" />
+              <div className="relative z-10">
+                <SupplyMarketDialog row={topMarket} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="border-theme-blue/30">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 w-full justify-between">
