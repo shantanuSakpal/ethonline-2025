@@ -47,8 +47,8 @@ export default function UserAaveSupplies() {
         <table className="w-full text-sm md:text-base border-collapse">
           <thead>
             <tr className="text-zinc-400 bg-zinc-900">
-              <th className="py-3 px-4 text-left">Chain</th>
-              <th className="py-3 px-4 text-left rounded-l-lg">Asset</th>
+              <th className="py-3 px-4 text-left rounded-l-lg">Chain</th>
+              <th className="py-3 px-4 text-left ">Asset</th>
               <th className="py-3 px-4 text-left">APY</th>
               <th className="py-3 px-4 text-left">Balance</th>
               <th className="py-3 px-4 text-left">USD Value</th>

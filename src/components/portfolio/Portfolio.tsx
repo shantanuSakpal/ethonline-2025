@@ -48,7 +48,7 @@ export default function Portfolio() {
     if (!address) return null;
     switch (active) {
       case "tokens":
-        return <TokensSection address={address} chain={chain} />;
+        return <TokensSection />;
       case "protocols":
         return <ProtocolList address={address} />;
 
@@ -61,16 +61,6 @@ export default function Portfolio() {
     <div className="px-4 py-6 md:px-8 space-y-4">
       <div className="flex flex-col  gap-3 mb-5">
         <h1 className="text-2xl font-semibold">Portfolio</h1>
-        {!isConnecting && !isDisconnected && address && (
-          <div className="flex items-center gap-4">
-            <ChainToggle
-              address={address}
-              selected={chain}
-              onChange={(c) => setChain(c as ChainChoice)}
-            />
-            {/* <TotalChainBalance address={address} chain={chain} /> */}
-          </div>
-        )}
       </div>
 
       {/* Tabs */}

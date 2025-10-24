@@ -1,9 +1,12 @@
 "use client";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import useSWR from "swr";
 import Image from "next/image";
 import { toUnits } from "@/lib/to-units";
 import { fetcher } from "@/components/portfolio/Portfolio";
+import { ChainToggle } from "@/components/portfolio/ChainToggle";
+import { ChainChoice } from "@/lib/constants";
+import { useAccount } from "wagmi";
 
 type TokenData = {
   token_address: string;
@@ -38,13 +41,10 @@ const fmtCompact = (n: number, d = 4) => {
 const changeColor = (p: number) =>
   p > 0 ? "text-green-500" : p < 0 ? "text-red-500" : "text-gray-400";
 
-export default function TokensSection({
-  address,
-  chain,
-}: {
-  address: string;
-  chain: string;
-}) {
+export default function TokensSection() {
+  const [chain, setChain] = useState<ChainChoice>("eth");
+  const { address, isConnecting, isDisconnected } = useAccount();
+
   const { data, error, isLoading } = useSWR<{ tokens: TokenData[] }>(
     `/api/portfolio/tokens?address=${address}&chain=${chain}`,
     fetcher
@@ -89,6 +89,19 @@ export default function TokensSection({
 
   return (
     <section className="bg-white/80 dark:bg-zinc-900/60 backdrop-blur-sm border border-zinc-200 dark:border-zinc-800 rounded-2xl px-5 py-5 w-full shadow-sm">
+      <div className="text-sm  font-bold mb-2">
+        Click on chain to toggle between chains
+      </div>
+      {address && (
+        <div className="w-full  gap-4 mb-5">
+          <ChainToggle
+            address={address}
+            selected={chain}
+            onChange={(c) => setChain(c as ChainChoice)}
+          />
+          {/* <TotalChainBalance address={address} chain={chain} /> */}
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between pb-4">
         <div className="flex items-center gap-2">
