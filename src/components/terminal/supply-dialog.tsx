@@ -73,7 +73,7 @@ export function SupplyMarketDialog({ row }: Props) {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md border border-zinc-500 bg-zinc-900">
         <DialogHeader>
           <div className="flex items-center gap-3">
             {row.chainLogo && (
@@ -97,13 +97,11 @@ export function SupplyMarketDialog({ row }: Props) {
             <div className="min-w-0 flex flex-col items-start">
               <DialogTitle className="flex items-center gap-2 truncate">
                 <span>Supply {row.supplyTokenSymbol}</span>
-                <span className="text-xs text-muted-foreground">on</span>
-                <span className="rounded-md bg-muted/40 px-2 py-0.5 text">
-                  {row.chainName}
-                </span>
+                <span className="">on</span>
+                <span className="">{row.chainName}</span>
               </DialogTitle>
               <DialogDescription>
-                <span className="inline-flex items-center gap-1 rounded-md bg-theme-blue/15 px-2 py-0.5 text-xs text-theme-blue ring-1 ring-theme-blue/30 mt-2">
+                <span className="inline-flex items-center gap-1 rounded-md bg-zinc-900 px-2 py-0.5 text-xs text-theme-orange ring-1 ring-theme-orange/30 mt-2">
                   {row.protocolName}
                 </span>
               </DialogDescription>
@@ -123,25 +121,20 @@ export function SupplyMarketDialog({ row }: Props) {
               <div className="text-muted-foreground">TVL</div>
               <div className="mt-1 font-semibold">{compactUsd(row.tvlUSD)}</div>
             </div>
-
-            <div className="rounded-md border border-zinc-600 p-3 col-span-2">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <div className="text-muted-foreground text-xs">
-                    Total market size
-                  </div>
-                  <div className="mt-1 font-medium">
-                    {compactUsd(Number(row.totalMarketSize))}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-muted-foreground text-xs">
-                    Available liquidity
-                  </div>
-                  <div className="mt-1 font-medium">
-                    {compactUsd(Number(row.totalAvailableLiquidity))}
-                  </div>
-                </div>
+            <div className="rounded-md border border-zinc-600 p-3">
+              <div className="text-muted-foreground text-xs">
+                Total market size
+              </div>
+              <div className="mt-1 font-medium">
+                {compactUsd(Number(row.totalMarketSize))}
+              </div>
+            </div>
+            <div className="rounded-md border border-zinc-600 p-3">
+              <div className="text-muted-foreground text-xs">
+                Available liquidity
+              </div>
+              <div className="mt-1 font-medium">
+                {compactUsd(Number(row.totalAvailableLiquidity))}
               </div>
             </div>
           </div>

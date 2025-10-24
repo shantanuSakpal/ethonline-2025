@@ -18,13 +18,12 @@ export default function Home() {
           </span>
 
           <h1 className="mx-auto max-w-4xl text-4xl font-semibold tracking-tight sm:text-5xl">
-            One-click allocation to the highest yields across chains
+            Put your idle stablecoins to work!
           </h1>
 
           <p className="mt-4 max-w-2xl text-muted-foreground">
-            Aggregate USDC/ETH from any chain, bridge via Nexus, swap via
-            Uniswap, and supply to Aave or Compound in a single transaction
-            path.
+            Aggregate your idle USDC/USDT/ETH from all chains, bridge and supply
+            to get highest yeild - all in a single transaction path.
           </p>
 
           <div className="mt-8 flex items-center gap-4">
@@ -47,34 +46,33 @@ export default function Home() {
         <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           <Feature
             title="Unify Liquidity"
-            desc="Consolidate dust and balances across chains into a single destination."
+            desc="Consolidate stablecoins from across chains and stake it with a single click. No bridging hassle. No jumping through multiple protocols "
+          />
+          <Feature
+            title="Gas Optimization"
+            desc="Intelligent gas fee optimization and batch transactions to minimize costs while maximizing your net returns across chains."
           />
           <Feature
             title="Best Yields"
-            desc="Rank Aave/Compound markets by APY, liquidity, and health."
+            desc="Rank Aave/Compound markets by APY, liquidity, health and risk."
           />
           <Feature
-            title="Bridge with Nexus"
-            desc="Bridge to the right chain and asset seamlessly using Nexus."
-          />
-          <Feature
-            title="Swap with Uniswap"
-            desc="Route into the target token (e.g. tBTC) for deposit."
+            title="One platform for all Defi"
+            desc="You can supply/stake , withdraw and manager all your positions wihout ever leaving Yield Pilot."
           />
         </div>
       </section>
 
       <section className="mx-auto max-w-6xl px-6 pb-24">
-        <div className="rounded-2xl border bg-card/60 backdrop-blur p-6">
+        <div className="rounded-2xl border border-theme-orange  bg-card/60 backdrop-blur p-6">
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div>
               <h3 className="text-xl font-semibold">
-                Example: tBTC on Aave Base
+                Example: Lending 50 USDC on Aave Base market
               </h3>
               <p className="text-sm text-muted-foreground mt-1">
-                If you have $5 of USDC scattered across chains, we’ll unify to
-                Base USDC, swap to tBTC via Uniswap, then supply to Aave Base
-                tBTC market.
+                If you have $50 of USDC scattered across chains, we'll unify
+                them and then supply to Aave Base market all in one transaction.
               </p>
             </div>
             <Link href="/terminal">
@@ -91,7 +89,7 @@ export default function Home() {
 
 function Feature({ title, desc }: { title: string; desc: string }) {
   return (
-    <div className="rounded-xl border bg-card/60 backdrop-blur p-5">
+    <div className="rounded-xl border border-zinc-600 bg-card/60 backdrop-blur p-5">
       <div className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-theme-blue/20 text-theme-blue ring-1 ring-theme-blue/30">
         <span className="text-sm">★</span>
       </div>

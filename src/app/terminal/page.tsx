@@ -70,17 +70,18 @@ export default function Terminal() {
         <CardHeader>
           <CardTitle>Flow Explanation</CardTitle>
           <CardDescription>
-            What happens when you click “One-click Allocate”.
+            What happens when you click “Supply"
           </CardDescription>
         </CardHeader>
         <CardContent className="text-sm leading-6 text-muted-foreground">
           <ol className="list-decimal pl-5 space-y-2">
-            <li>Fetch balances and compute unified USDC/ETH across chains.</li>
-            <li>Bridge to destination chain using Nexus.</li>
             <li>
-              Swap to target token (e.g. tBTC) via Uniswap on destination chain.
+              Fetch balances and compute unified USDC/USDT/ETH across chains.
             </li>
-            <li>Deposit to the selected protocol market.</li>
+            <li>
+              Bridge to destination chain using Nexus and supply to the selected
+              protocol market.
+            </li>
           </ol>
         </CardContent>
       </Card>

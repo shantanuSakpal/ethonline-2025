@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -11,7 +11,6 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Loader2, LucideRefreshCcw, ArrowUpDown } from "lucide-react";
-import type { AaveV3Summary } from "@/lib/aave-v3/types";
 import Image from "next/image";
 import { ChainId, OrderDirection, useAaveMarkets } from "@aave/react";
 import {
@@ -19,11 +18,9 @@ import {
   MIN_TVL,
   AAVE_AND_AVAIL_SUPPORTED_CHAINS,
 } from "@/lib/constants";
-import { filterByTokens } from "@/lib/aave-v3/filter-by-tokens";
-import { filterByMinAPY } from "@/lib/aave-v3/filter-by-min-apy";
-import { filterByMinTVL } from "@/lib/aave-v3/filter-by-min-tvl";
 import { summarizeAaveV3Market } from "@/lib/aave-v3/summarize-aave-v3-markets";
 import { SupplyMarketDialog } from "@/components/terminal/supply-dialog";
+import type { AaveV3Summary } from "@/lib/aave-v3/types";
 
 type SortField =
   | "chainName"
@@ -37,83 +34,62 @@ export default function MarketsList() {
   const [protocol, setProtocol] = useState<"Aave" | "Compound" | "All">("All");
   const [sortField, setSortField] = useState<SortField>("apy");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
-  const compoundStats: AaveV3Summary[] = []; // TODO: wire Compound
+  const [markets, setMarkets] = useState<AaveV3Summary[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const { data: markets, loading } = useAaveMarkets({
+  const { data: rawMarkets, loading: marketsLoading } = useAaveMarkets({
     chainIds: AAVE_AND_AVAIL_SUPPORTED_CHAINS as ChainId[],
     suppliesOrderBy: { supplyApy: OrderDirection.Desc },
   });
 
-  const aaveStats = useMemo(() => {
-    if (!markets) return [];
+  // safely update local state when hook data changes
+  useEffect(() => {
+    if (rawMarkets) {
+      const summarized = summarizeAaveV3Market(rawMarkets);
+      setMarkets(summarized);
+      setLoading(false);
+    }
+  }, [rawMarkets]);
 
-    console.log("markets", markets);
-    const summary = summarizeAaveV3Market(markets);
-
-    const filtered = filterByMinTVL(summary, MIN_TVL);
-    const filteredByAPY = filterByMinAPY(filtered, MIN_APY);
-    const filteredByTokens = filterByTokens(filteredByAPY, [
-      "USDC",
-      "USDT",
-      "ETH",
-    ]);
-
-    return filteredByTokens;
-  }, [markets]);
+  const compoundStats: AaveV3Summary[] = []; // future placeholder
 
   const displayData = useMemo(() => {
-    let data = [];
-    if (protocol === "Aave") data = aaveStats;
+    let data: AaveV3Summary[] = [];
+
+    if (protocol === "Aave") data = markets;
     else if (protocol === "Compound") data = compoundStats;
-    else data = [...aaveStats, ...compoundStats];
+    else data = [...markets, ...compoundStats];
 
-    // Sort the data
+    // apply filters
+    data = data
+      .filter((m) => m.tvlUSD >= MIN_TVL)
+      .filter((m) => m.apy >= MIN_APY)
+      .filter((m) => ["USDC", "USDT", "ETH"].includes(m.supplyTokenSymbol));
+
+    // apply sorting
     return [...data].sort((a, b) => {
-      let aValue: string | number, bValue: string | number;
-
+      const dir = sortDirection === "asc" ? 1 : -1;
       switch (sortField) {
         case "chainName":
-          aValue = a.chainName;
-          bValue = b.chainName;
-          break;
+          return a.chainName.localeCompare(b.chainName) * dir;
         case "protocolName":
-          aValue = a.protocolName;
-          bValue = b.protocolName;
-          break;
+          return a.protocolName.localeCompare(b.protocolName) * dir;
         case "supplyTokenName":
-          aValue = a.supplyTokenName;
-          bValue = b.supplyTokenName;
-          break;
+          return a.supplyTokenName.localeCompare(b.supplyTokenName) * dir;
         case "apy":
-          aValue = a.apy;
-          bValue = b.apy;
-          break;
+          return (a.apy - b.apy) * dir;
         case "tvlUSD":
-          aValue = a.tvlUSD;
-          bValue = b.tvlUSD;
-          break;
+          return (a.tvlUSD - b.tvlUSD) * dir;
         default:
           return 0;
       }
-
-      if (typeof aValue === "string" && typeof bValue === "string") {
-        return sortDirection === "asc"
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
-      }
-
-      if (typeof aValue === "number" && typeof bValue === "number") {
-        return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
-      }
-
-      return 0;
     });
-  }, [protocol, aaveStats, compoundStats, sortField, sortDirection]);
+  }, [protocol, markets, compoundStats, sortField, sortDirection]);
 
   const handleSort = (field: SortField) => {
-    if (sortField === field) {
+    if (sortField === field)
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
+    else {
       setSortField(field);
       setSortDirection("asc");
     }
@@ -131,25 +107,14 @@ export default function MarketsList() {
                 <p>Live</p>
               </div>
             </div>
-            <div
-              className="cursor-pointer"
-              onClick={async () => {
-                // const stats = await getAaveStats();
-                // if (stats) setAaveStats(stats);
-              }}
-            >
-              {loading ? (
-                <Loader2 size={18} className="animate-spin" />
-              ) : (
-                <LucideRefreshCcw size={18} />
-              )}
-            </div>
           </CardTitle>
           <CardDescription>
             Compare yields with sortable columns.
           </CardDescription>
         </CardHeader>
+
         <CardContent className="space-y-6 w-full">
+          {/* Protocol Tabs */}
           <div className="flex flex-col gap-4 lg:flex-row ">
             <div className="flex-1">
               <label className="mb-1 block text-sm font-semibold">
@@ -177,6 +142,7 @@ export default function MarketsList() {
             </div>
           </div>
 
+          {/* Table */}
           {loading ? (
             <div className="px-4 py-6 text-center text-muted-foreground">
               <span className="inline-flex items-center gap-2">
@@ -185,66 +151,37 @@ export default function MarketsList() {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Header with sortable columns */}
+              {/* Header */}
               <div className="grid grid-cols-6 gap-4 px-4 py-2 text-sm font-medium text-muted-foreground border-b">
-                <div className="flex items-center justify-center">
-                  <Button
-                    variant="ghost"
-                    onClick={() => handleSort("chainName")}
-                    className="px-2 cursor-pointer h-auto"
-                  >
-                    Chain <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
-                  </Button>
-                </div>
-                <div className="flex items-center justify-center">
-                  <Button
-                    variant="ghost"
-                    onClick={() => handleSort("protocolName")}
-                    className="px-2 cursor-pointer h-auto"
-                  >
-                    Protocol <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
-                  </Button>
-                </div>
-                <div className="flex items-center justify-center">
-                  <Button
-                    variant="ghost"
-                    onClick={() => handleSort("supplyTokenName")}
-                    className="px-2 cursor-pointer h-auto"
-                  >
-                    Suggestions <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
-                  </Button>
-                </div>
-                <div className="flex items-center justify-center">
-                  <Button
-                    variant="ghost"
-                    onClick={() => handleSort("apy")}
-                    className="px-2 cursor-pointer h-auto"
-                  >
-                    APY <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
-                  </Button>
-                </div>
-                <div className="flex items-center justify-center">
-                  <Button
-                    variant="ghost"
-                    onClick={() => handleSort("tvlUSD")}
-                    className="px-2 cursor-pointer h-auto"
-                  >
-                    TVL <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
-                  </Button>
-                </div>
+                {[
+                  ["chainName", "Chain"],
+                  ["protocolName", "Protocol"],
+                  ["supplyTokenName", "Token"],
+                  ["apy", "APY"],
+                  ["tvlUSD", "TVL"],
+                ].map(([field, label]) => (
+                  <div key={field} className="flex items-center justify-center">
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort(field as SortField)}
+                      className="px-2 cursor-pointer h-auto"
+                    >
+                      {label} <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ))}
                 <div className="flex items-center justify-center">
                   <span className="px-2">Actions</span>
                 </div>
               </div>
 
-              {/* Market list */}
-              <div className="space-y-2">
-                {displayData.map((market, index) => (
+              {/* Rows */}
+              {displayData.length > 0 ? (
+                displayData.map((market, index) => (
                   <div
                     key={`${market.chainId}-${market.supplyTokenAddress}-${index}`}
                     className="grid grid-cols-6 gap-4 px-4 py-3 items-center hover:bg-muted/50 rounded-lg transition-colors"
                   >
-                    {/* Chain */}
                     <div className="flex items-center justify-center">
                       <Image
                         src={market.chainLogo}
@@ -254,15 +191,11 @@ export default function MarketsList() {
                         className="w-6 h-6 rounded-full"
                       />
                     </div>
-
-                    {/* Protocol */}
-                    <div className="flex items-center justify-center text-sm">
+                    <div className="flex  justify-center text-sm">
                       {market.protocolName}
                     </div>
-
-                    {/* Market */}
-                    <div className="flex items-center gap-2">
-                      {market.supplyTokenLogo ? (
+                    <div className="flex items-center justify-center gap-2">
+                      {market.supplyTokenLogo && (
                         <Image
                           className="w-6 h-6 rounded-full"
                           src={market.supplyTokenLogo}
@@ -270,18 +203,14 @@ export default function MarketsList() {
                           width={16}
                           height={16}
                         />
-                      ) : null}
+                      )}
                       <span className="text-sm">{market.supplyTokenName}</span>
                     </div>
-
-                    {/* APY */}
                     <div className="flex items-center justify-center">
                       <span className="font-medium text-theme-orange text-sm">
                         {market.apy.toFixed(2)}%
                       </span>
                     </div>
-
-                    {/* TVL */}
                     <div className="flex items-center justify-center text-sm">
                       $
                       {new Intl.NumberFormat("en", {
@@ -291,16 +220,12 @@ export default function MarketsList() {
                         .format(market.tvlUSD)
                         .toLowerCase()}
                     </div>
-
-                    {/* Actions */}
                     <div className="flex items-center justify-center">
                       <SupplyMarketDialog row={market} />
                     </div>
                   </div>
-                ))}
-              </div>
-
-              {displayData.length === 0 && (
+                ))
+              ) : (
                 <div className="px-4 py-6 text-center text-muted-foreground">
                   No markets found
                 </div>
