@@ -45,3 +45,14 @@ export const CHAINID_TO_MARKET_ADDRESS = {
   "56": "0x6807dc923806fE8Fd134338EABCA509979a7e0cB",
   "534352": "0x11fCfe756c05AD438e312a7fd934381537D3cFfe",
 };
+
+export const CHAIN_LOGO_URL: Record<number, string> = {
+  1: "https://statics.aave.com/ethereum.svg",
+  8453: "https://statics.aave.com/base.svg",
+  137: "https://statics.aave.com/polygon.svg",
+  10: "https://statics.aave.com/optimism.svg",
+  42161: "https://statics.aave.com/arbitrum.svg",
+  43114: "https://statics.aave.com/avalanche.svg",
+  56: "https://statics.aave.com/bnbchain.svg",
+  534352: "https://statics.aave.com/scroll-network.svg",
+};

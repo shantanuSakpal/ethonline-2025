@@ -21,6 +21,7 @@ import {
 import { summarizeAaveV3Market } from "@/lib/aave-v3/summarize-aave-v3-markets";
 import { SupplyMarketDialog } from "@/components/terminal/supply-dialog";
 import type { AaveV3Summary } from "@/lib/aave-v3/types";
+import { getCompoundMarkets } from "@/lib/compound-v3/get-compound-markets";
 
 type SortField =
   | "chainName"
@@ -30,11 +31,20 @@ type SortField =
   | "tvlUSD";
 type SortDirection = "asc" | "desc";
 
+// Helper function to clean up protocol names
+const formatProtocolName = (name: string): string => {
+  if (name.toLowerCase().startsWith("aavev3")) {
+    return "Aave v3";
+  }
+  return name;
+};
+
 export default function MarketsList() {
   const [protocol, setProtocol] = useState<"Aave" | "Compound" | "All">("All");
   const [sortField, setSortField] = useState<SortField>("apy");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [markets, setMarkets] = useState<AaveV3Summary[]>([]);
+  const [compoundStats, setCompoundStats] = useState<AaveV3Summary[]>([]);
   const [loading, setLoading] = useState(true);
 
   const { data: rawMarkets, loading: marketsLoading } = useAaveMarkets({
@@ -47,11 +57,24 @@ export default function MarketsList() {
     if (rawMarkets) {
       const summarized = summarizeAaveV3Market(rawMarkets);
       setMarkets(summarized);
-      setLoading(false);
     }
   }, [rawMarkets]);
 
-  const compoundStats: AaveV3Summary[] = []; // future placeholder
+  // fetch Compound markets
+  useEffect(() => {
+    async function fetchCompound() {
+      try {
+        const compound = await getCompoundMarkets(true);
+        setCompoundStats(compound);
+        console.log("compound markets --- ", compound);
+        setLoading(false);
+      } catch (error) {
+        console.error("Failed to fetch Compound markets:", error);
+        setLoading(false);
+      }
+    }
+    fetchCompound();
+  }, []);
 
   const displayData = useMemo(() => {
     let data: AaveV3Summary[] = [];
@@ -64,9 +87,9 @@ export default function MarketsList() {
     data = data
       .filter((m) => m.tvlUSD >= MIN_TVL)
       .filter((m) => m.apy >= MIN_APY)
-      .filter((m) => ["USDC", "USDT"].includes(m.supplyTokenSymbol));
-
-    // console.log("data --- ", data);
+      .filter(
+        (m) => m.supplyTokenSymbol === "USDC" || m.supplyTokenSymbol === "USDT"
+      );
 
     // apply sorting
     return [...data].sort((a, b) => {
@@ -97,82 +120,117 @@ export default function MarketsList() {
     }
   };
 
-  // find top APY market
-  const topMarket = useMemo(() => {
-    if (!displayData.length) return null;
-    return [...displayData].sort((a, b) => b.apy - a.apy)[0];
-  }, [displayData]);
+  // find top APY market for each protocol
+  const topAaveMarket = useMemo(() => {
+    const filtered = markets
+      .filter((m) => m.tvlUSD >= MIN_TVL)
+      .filter((m) => m.apy >= MIN_APY)
+      .filter(
+        (m) => m.supplyTokenSymbol === "USDC" || m.supplyTokenSymbol === "USDT"
+      );
+    if (!filtered.length) return null;
+    return [...filtered].sort((a, b) => b.apy - a.apy)[0];
+  }, [markets]);
+
+  const topCompoundMarket = useMemo(() => {
+    const filtered = compoundStats
+      .filter((m) => m.tvlUSD >= MIN_TVL)
+      .filter((m) => m.apy >= MIN_APY)
+      .filter(
+        (m) => m.supplyTokenSymbol === "USDC" || m.supplyTokenSymbol === "USDT"
+      );
+    if (!filtered.length) return null;
+    return [...filtered].sort((a, b) => b.apy - a.apy)[0];
+  }, [compoundStats]);
+
+  const renderTopYieldCard = (
+    market: AaveV3Summary | null,
+    protocolName: string
+  ) => {
+    if (!market) return null;
+
+    return (
+      <Card className="mb-6 border border-theme-blue/40 bg-gradient-to-br from-theme-blue/10 to-transparent w-fit">
+        <CardContent className="px-6 py-5 flex flex-col items-center text-center gap-3">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="border-theme-orange border text-theme-orange text-xs px-2 py-1 rounded-full bg-theme-orange/10">
+              Top Yield
+            </div>
+            <div className="text-xs px-2 py-1 rounded-full bg-zinc-800 text-zinc-300">
+              {protocolName}
+            </div>
+          </div>
+          {/* Headline */}
+          <div className="flex items-center gap-2">
+            {market.supplyTokenLogo && (
+              <Image
+                src={market.supplyTokenLogo}
+                alt={market.supplyTokenSymbol}
+                width={28}
+                height={28}
+                className="rounded-full"
+              />
+            )}
+            <div className="flex items-center gap-2">
+              {market.supplyTokenSymbol}
+              <span className="text-sm ">on</span>
+              <Image
+                src={market.chainLogo}
+                alt={market.chainName}
+                width={28}
+                height={28}
+                className="rounded-full"
+              />
+              <span className="">{market.chainName}</span>
+            </div>
+          </div>
+
+          {/* APY Highlight */}
+          <p className="text-3xl font-bold text-theme-orange">
+            {market.apy.toFixed(2)}% APY
+          </p>
+
+          {/* Stats Row */}
+          <div className="flex gap-6 text-sm text-zinc-400">
+            <p>
+              TVL:{" "}
+              <span className="text-white font-medium">
+                $
+                {new Intl.NumberFormat("en", { notation: "compact" }).format(
+                  market.tvlUSD
+                )}
+              </span>
+            </p>
+            <p>
+              Liquidity:{" "}
+              <span className="text-white font-medium">
+                $
+                {new Intl.NumberFormat("en", { notation: "compact" }).format(
+                  market.totalAvailableLiquidity || 0
+                )}
+              </span>
+            </p>
+          </div>
+
+          {/* Supply Button */}
+          <div className="relative mt-2 group">
+            <div className="absolute -inset-1 bg-theme-blue/40 blur-md rounded-lg opacity-70 group-hover:opacity-100 transition" />
+            <div className="relative z-10">
+              <SupplyMarketDialog row={market} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <div>
-      {topMarket && (
-        <Card className="mb-6 border border-theme-blue/40 bg-gradient-to-br from-theme-blue/10 to-transparent w-fit">
-          <CardContent className="px-6 py-5 flex flex-col items-center text-center gap-3">
-            <div className="border-theme-orange border text-theme-orange text-xs px-2 py-1 rounded-full bg-theme-orange/10 mb-2">
-              Top Yield Opportunity
-            </div>
-            {/* Headline */}
-            <div className="flex items-center gap-2">
-              {topMarket.supplyTokenLogo && (
-                <Image
-                  src={topMarket.supplyTokenLogo}
-                  alt={topMarket.supplyTokenSymbol}
-                  width={28}
-                  height={28}
-                  className="rounded-full"
-                />
-              )}
-              <div className="flex items-center gap-2">
-                {topMarket.supplyTokenSymbol}
-                <span className="text-sm ">on</span>
-                <Image
-                  src={topMarket.chainLogo}
-                  alt={topMarket.chainName}
-                  width={28}
-                  height={28}
-                  className="rounded-full"
-                />
-                <span className="">{topMarket.chainName}</span>
-              </div>
-            </div>
-
-            {/* APY Highlight */}
-            <p className="text-3xl font-bold text-theme-orange">
-              {topMarket.apy.toFixed(2)}% APY
-            </p>
-
-            {/* Stats Row */}
-            <div className="flex gap-6 text-sm text-zinc-400">
-              <p>
-                TVL:{" "}
-                <span className="text-white font-medium">
-                  $
-                  {new Intl.NumberFormat("en", { notation: "compact" }).format(
-                    topMarket.tvlUSD
-                  )}
-                </span>
-              </p>
-              <p>
-                Liquidity:{" "}
-                <span className="text-white font-medium">
-                  $
-                  {new Intl.NumberFormat("en", { notation: "compact" }).format(
-                    topMarket.totalAvailableLiquidity || 0
-                  )}
-                </span>
-              </p>
-            </div>
-
-            {/* Supply Button */}
-            <div className="relative mt-2 group">
-              <div className="absolute -inset-1 bg-theme-blue/40 blur-md rounded-lg opacity-70 group-hover:opacity-100 transition" />
-              <div className="relative z-10">
-                <SupplyMarketDialog row={topMarket} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Top Yield Cards */}
+      <div className="flex flex-row md:flex-row gap-4 mb-6 ">
+        {topAaveMarket && renderTopYieldCard(topAaveMarket, "Aave")}
+        {topCompoundMarket && renderTopYieldCard(topCompoundMarket, "Compound")}
+      </div>
 
       <Card className="border-theme-blue/30">
         <CardHeader>
@@ -259,7 +317,7 @@ export default function MarketsList() {
                     key={`${market.chainId}-${market.supplyTokenAddress}-${index}`}
                     className="grid grid-cols-6 gap-4 px-4 py-3 items-center hover:bg-muted/50 rounded-lg transition-colors"
                   >
-                    <div className="flex items-center justify-center">
+                    <div className="flex items-center">
                       <Image
                         src={market.chainLogo}
                         alt={market.chainName}
@@ -267,11 +325,12 @@ export default function MarketsList() {
                         height={16}
                         className="w-6 h-6 rounded-full"
                       />
+                      <span className="text-sm ml-2">{market.chainName}</span>
                     </div>
                     <div className="flex  justify-center text-sm">
-                      {market.protocolName}
+                      {formatProtocolName(market.protocolName)}
                     </div>
-                    <div className="flex items-center justify-center gap-2">
+                    <div className="flex items-center  gap-2">
                       {market.supplyTokenLogo && (
                         <Image
                           className="w-6 h-6 rounded-full"
