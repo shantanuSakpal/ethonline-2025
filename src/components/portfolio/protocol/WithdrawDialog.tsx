@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,26 +11,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useWalletClient } from "wagmi";
-import { EnsoClient } from "@ensofinance/sdk";
 import { formatUnits, parseUnits, type Address } from "viem";
-import {
-  useWriteContract,
-  useReadContracts,
-  useWaitForTransactionReceipt,
-} from "wagmi";
-import { bigDecimal, evmAddress, useAaveMarket } from "@aave/react";
+import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { useAaveMarket } from "@aave/react";
 import { Label } from "@/components/ui/label";
 import { toast } from "react-toastify";
 
-// ABI for token approval
+// ERC20 ABI for approval
 const erc20Abi = [
-  {
-    type: "function",
-    name: "decimals",
-    stateMutability: "view",
-    inputs: [],
-    outputs: [{ type: "uint8" }],
-  },
   {
     type: "function",
     name: "approve",
@@ -41,7 +29,32 @@ const erc20Abi = [
     ],
     outputs: [{ type: "bool" }],
   },
+  {
+    type: "function",
+    name: "allowance",
+    stateMutability: "view",
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "spender", type: "address" },
+    ],
+    outputs: [{ type: "uint256" }],
+  },
 ];
+
+// Aave Pool ABI for withdraw
+const aavePoolAbi = [
+  {
+    type: "function",
+    name: "withdraw",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "asset", type: "address" },
+      { name: "amount", type: "uint256" },
+      { name: "to", type: "address" },
+    ],
+    outputs: [{ type: "uint256" }],
+  },
+] as const;
 
 export default function WithdrawDialog({
   isOpen,
@@ -49,46 +62,36 @@ export default function WithdrawDialog({
   position,
   onRefresh,
 }: any) {
-  const { data: walletClient } = useWalletClient();
   const [amount, setAmount] = useState("");
-  const [slippage, setSlippage] = useState("0.5");
-  const [route, setRoute] = useState<any>(null);
-  const [approval, setApproval] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [approvalSuccess, setApprovalSuccess] = useState(false);
-  const [withdrawSuccess, setWithdrawSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [approvalSuccess, setApprovalSuccess] = useState(false);
+
+  const { data: walletClient } = useWalletClient();
 
   const { market, currency, apy, balance } = position;
 
-  const {
-    data: aaveMarketData,
-    loading: aaveMarketLoading,
-    error: aaveMarketError,
-  } = useAaveMarket({
+  const { data: aaveMarketData, loading: aaveMarketLoading } = useAaveMarket({
     address: market.address,
     chainId: market.chain.chainId,
   });
 
-  const chainId = market.chain.chainId;
-  const fromAddress = walletClient?.account?.address as
-    | `0x${string}`
-    | undefined;
+  const fromAddress = walletClient?.account?.address as Address | undefined;
+  // const chainId = market.chain.chainId;
 
-  // Read token decimals
-  const { data: metaData } = useReadContracts({
-    allowFailure: true,
-    contracts: [
-      {
-        address: currency.address as Address,
-        abi: erc20Abi,
-        functionName: "decimals",
-      },
-    ],
-    query: { enabled: !!currency.address },
-  });
-  const decimals =
-    typeof metaData?.[0]?.result === "number" ? metaData[0].result : 18;
+  // // Extract reserve data
+  const matchedReserve = useMemo(() => {
+    if (!aaveMarketData?.supplyReserves) return null;
+    return aaveMarketData.supplyReserves.find(
+      (reserve: any) =>
+        reserve.underlyingToken.address.toLowerCase() ===
+        currency.address.toLowerCase()
+    );
+  }, [aaveMarketData, currency.address]);
+
+  const poolAddress = matchedReserve?.market.address;
+  const assetAddress = matchedReserve?.underlyingToken.address as Address;
+  // The aToken address is the balance address
+  const aTokenAddress = matchedReserve?.aToken.address as Address | undefined;
 
   // Approval transaction hooks
   const {
@@ -96,170 +99,104 @@ export default function WithdrawDialog({
     data: approvalTxHash,
     isPending: isApprovalPending,
   } = useWriteContract();
+
   const { isLoading: isApprovalLoading, isSuccess: isApprovalSuccess } =
     useWaitForTransactionReceipt({ hash: approvalTxHash });
 
-  // Withdraw transaction state
-  const [withdrawTxHash, setWithdrawTxHash] = useState<
-    `0x${string}` | undefined
-  >();
+  // Withdraw transaction hooks
+  const {
+    writeContractAsync: writeWithdrawAsync,
+    data: withdrawTxHash,
+    isPending: isWithdrawPending,
+  } = useWriteContract();
+
   const { isLoading: isWithdrawLoading, isSuccess: isWithdrawSuccess } =
     useWaitForTransactionReceipt({ hash: withdrawTxHash });
 
-  // Fetch Enso route and approval data
+  // Handle approval success
   useEffect(() => {
-    if (!fromAddress || !amount || !decimals || aaveMarketLoading) return;
-    let cancelled = false;
-    // Find the supply reserve that matches the underlying token (user's supplied asset)
-    const matchedReserve = aaveMarketData?.supplyReserves.find(
-      (reserve: any) =>
-        reserve.underlyingToken.address.toLowerCase() ===
-        currency.address.toLowerCase()
-    );
+    if (isApprovalSuccess) {
+      setApprovalSuccess(true);
+      toast.success("Approval successful! Click 'Withdraw' to proceed.");
+    }
+  }, [isApprovalSuccess]);
 
-    // Extract its aToken address to use as tokenIn for Enso withdraw
-    const aTokenAddress = matchedReserve?.aToken?.address;
-    const supplyTokenAddress = matchedReserve?.underlyingToken?.address;
-
-    console.log("Matched reserve:", matchedReserve);
-    console.log("Using aToken for withdraw:", aTokenAddress);
-
-    const fetchRoute = async () => {
-      try {
-        setLoading(true);
-        const apiKey = process.env.NEXT_PUBLIC_ENSO_API_KEY!;
-        const enso = new EnsoClient({ apiKey });
-        const amountIn = parseUnits(amount, decimals).toString();
-        const slippagePct = parseFloat(slippage) * 100;
-
-        if (!aTokenAddress || !supplyTokenAddress) {
-          setError("No matching aToken found for this asset in Aave market");
-          setLoading(false);
-          return;
-        }
-
-        const [approvalData, routeData] = await Promise.all([
-          enso.getApprovalData({
-            fromAddress,
-            tokenAddress: aTokenAddress,
-            amount: amountIn,
-            chainId,
-          }),
-          enso.getRouteData({
-            chainId,
-            fromAddress,
-            receiver: fromAddress,
-            amountIn: [amountIn],
-            tokenIn: [aTokenAddress],
-            tokenOut: [supplyTokenAddress],
-            slippage: slippagePct,
-            routingStrategy: "router",
-          }),
-        ]);
-
-        if (!cancelled) {
-          setApproval(approvalData);
-          setRoute(routeData);
-          setError(null);
-        }
-      } catch (err: any) {
-        if (!cancelled) setError(err.message || "Failed to fetch route");
-      } finally {
-        if (!cancelled) setLoading(false);
+  // Handle withdraw success
+  useEffect(() => {
+    if (isWithdrawSuccess) {
+      toast.success("Withdraw successful!");
+      onClose();
+      if (onRefresh) {
+        onRefresh();
       }
-    };
+    }
+  }, [isWithdrawSuccess, onClose, onRefresh]);
 
-    fetchRoute();
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    amount,
-    slippage,
-    fromAddress,
-    chainId,
-    currency.address,
-    decimals,
-    aaveMarketData,
-  ]);
-
+  // Approval function
   async function handleApprove() {
-    if (!approval) return;
+    if (!aTokenAddress || !poolAddress || !fromAddress || !amount) return;
+
     try {
+      const amountInWei = parseUnits(amount, currency.decimals);
+
       await writeApprovalAsync({
-        address: approval.tx.to as Address,
+        address: aTokenAddress,
         abi: erc20Abi,
         functionName: "approve",
-        args: [approval.spender, BigInt(approval.amount)],
+        args: [poolAddress, BigInt(amountInWei.toString())],
       });
     } catch (err: any) {
       if (err?.message?.includes("User rejected")) {
-        console.log({ "user rejected approval": err });
+        console.log("User rejected approval");
       } else {
         console.error("Approval error:", err);
+        setError(err.message || "Approval failed");
       }
     }
   }
 
   async function handleWithdraw() {
-    if (!route) return;
+    if (!assetAddress || !fromAddress || !amount || !poolAddress) return;
+
     try {
-      console.log("Executing withdraw transaction...");
-      const hash = await walletClient?.sendTransaction({
-        chain: undefined,
-        account: fromAddress!,
-        to: route.tx.to as Address,
-        value: BigInt(route.tx.value),
-        data: route.tx.data as `0x${string}`,
+      const amountInWei = parseUnits(amount, currency.decimals);
+
+      await writeWithdrawAsync({
+        address: poolAddress,
+        abi: aavePoolAbi,
+        functionName: "withdraw",
+        args: [assetAddress, BigInt(amountInWei.toString()), fromAddress],
       });
-      console.log("Withdraw transaction sent:", hash);
-      if (hash) {
-        setWithdrawTxHash(hash);
-      }
     } catch (err: any) {
       if (err?.message?.includes("User rejected")) {
-        console.log("User rejected withdraw.");
+        console.log("User rejected withdraw");
       } else {
-        console.log("Withdraw error:", err);
+        console.error("Withdraw error:", err);
+        setError(err.message || "Withdraw failed");
       }
     }
   }
 
-  // useEffect to handle approval success
-  useEffect(() => {
-    if (isApprovalSuccess) {
-      setApprovalSuccess(true);
-      toast.success(`Approval successful. Click "Withdraw Tokens" to proceed.`);
-    }
-  }, [isApprovalSuccess]);
-
-  // useEffect to handle withdraw success
-  useEffect(() => {
-    if (isWithdrawSuccess) {
-      setWithdrawSuccess(true);
-      toast.success(`Withdraw successful on ${chainId}.`);
-      console.log(`Withdraw successful on ${chainId}.`);
-      onClose();
-      // Refresh portfolio data
-      if (onRefresh) {
-        onRefresh();
-      }
-    }
-  }, [isWithdrawSuccess, chainId, onClose, onRefresh]);
-
   const buttonText = (() => {
-    if (aaveMarketLoading) return "Fetching market data…";
-    if (loading) return "Fetching route…";
-    if (isApprovalPending || isApprovalLoading || isWithdrawLoading)
-      return "Processing…";
-    if (!approvalSuccess) return "Approve Token";
-    return "Withdraw Tokens";
+    if (isApprovalPending || isApprovalLoading) return "Approving…";
+    if (isWithdrawPending || isWithdrawLoading) return "Withdrawing…";
+    if (!approvalSuccess) return "Approve & Withdraw";
+    return "Withdraw";
   })();
 
   const handleClick = async () => {
-    if (!approvalSuccess) await handleApprove();
-    else await handleWithdraw();
+    if (!approvalSuccess) {
+      await handleApprove();
+    } else {
+      await handleWithdraw();
+    }
   };
+
+  const isLoading =
+    isApprovalPending ||
+    isApprovalLoading ||
+    isWithdrawPending ||
+    isWithdrawLoading;
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="bg-zinc-950 border border-zinc-800 text-white max-w-md">
@@ -273,7 +210,7 @@ export default function WithdrawDialog({
           <p className="text-sm text-zinc-400">
             Available:{" "}
             <span className="text-zinc-100 font-medium">
-              {balance.amount.value} {currency.symbol}
+              {Number(balance.amount.value).toFixed(2)} {currency.symbol}
             </span>
           </p>
           <Label className="text-sm text-zinc-400">Amount</Label>
@@ -283,34 +220,8 @@ export default function WithdrawDialog({
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             className="bg-zinc-900 border-zinc-800 text-zinc-100"
+            max={balance.amount.value}
           />
-          <Label className="text-sm text-zinc-400">Slippage</Label>
-          <Input
-            type="number"
-            placeholder="Slippage (%)"
-            value={slippage}
-            onChange={(e) => setSlippage(e.target.value)}
-            className="bg-zinc-900 border-zinc-800 text-zinc-100"
-          />
-
-          {route && (
-            <div className="text-xs text-zinc-400 mt-2 space-y-1">
-              <p>
-                Est. Output:{" "}
-                <span className="text-zinc-100">
-                  {formatUnits(BigInt(route.amountOut ?? "0"), decimals)}{" "}
-                  {currency.symbol}
-                </span>
-              </p>
-              <p>
-                Min Output:{" "}
-                <span className="text-zinc-100">
-                  {formatUnits(BigInt(route.minAmountOut ?? "0"), decimals)}{" "}
-                  {currency.symbol}
-                </span>
-              </p>
-            </div>
-          )}
         </div>
 
         <DialogFooter className="mt-4">
@@ -318,11 +229,9 @@ export default function WithdrawDialog({
             onClick={handleClick}
             disabled={
               !amount ||
-              loading ||
-              isApprovalPending ||
-              isApprovalLoading ||
-              isWithdrawLoading ||
-              aaveMarketLoading
+              !aTokenAddress ||
+              isLoading ||
+              Number(amount) > Number(balance.amount.value)
             }
             className="w-full bg-blue-600 hover:bg-blue-700 text-white"
           >
@@ -331,13 +240,10 @@ export default function WithdrawDialog({
         </DialogFooter>
 
         {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-        {approvalSuccess && !withdrawSuccess && (
+        {approvalSuccess && !isWithdrawSuccess && (
           <p className="mt-2 text-blue-400 text-sm">
-            Token approved. Click on "Withdraw Tokens" to withdraw.
+            Token approved. Click "Withdraw" to proceed.
           </p>
-        )}
-        {withdrawSuccess && (
-          <p className="mt-2 text-green-400 text-sm">Withdraw successful.</p>
         )}
       </DialogContent>
     </Dialog>
