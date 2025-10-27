@@ -214,14 +214,24 @@ export default function WithdrawDialog({
             </span>
           </p>
           <Label className="text-sm text-zinc-400">Amount</Label>
-          <Input
-            type="number"
-            placeholder="Enter amount"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="bg-zinc-900 border-zinc-800 text-zinc-100"
-            max={balance.amount.value}
-          />
+          <div className="flex gap-2">
+            <Input
+              type="number"
+              placeholder="Enter amount"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="bg-zinc-900 border-zinc-800 text-zinc-100 flex-1"
+              max={balance.amount.value}
+            />
+            <Button
+              type="button"
+              onClick={() => setAmount(balance.amount.value)}
+              variant="outline"
+              className="border-zinc-700 hover:bg-zinc-800 text-zinc-300 hover:text-zinc-100 whitespace-nowrap"
+            >
+              Max
+            </Button>
+          </div>
         </div>
 
         <DialogFooter className="mt-4">
