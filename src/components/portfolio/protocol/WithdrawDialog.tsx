@@ -85,13 +85,21 @@ export default function WithdrawDialog({ isOpen, onClose, position }: any) {
   const decimals =
     typeof metaData?.[0]?.result === "number" ? metaData[0].result : 18;
 
+  // Approval transaction hooks
   const {
-    writeContractAsync,
-    data: txHash,
-    isPending: isWriting,
+    writeContractAsync: writeApprovalAsync,
+    data: approvalTxHash,
+    isPending: isApprovalPending,
   } = useWriteContract();
-  const { isLoading: isTxLoading, isSuccess: isTxSuccess } =
-    useWaitForTransactionReceipt({ hash: txHash });
+  const { isLoading: isApprovalLoading, isSuccess: isApprovalSuccess } =
+    useWaitForTransactionReceipt({ hash: approvalTxHash });
+
+  // Withdraw transaction state
+  const [withdrawTxHash, setWithdrawTxHash] = useState<
+    `0x${string}` | undefined
+  >();
+  const { isLoading: isWithdrawLoading, isSuccess: isWithdrawSuccess } =
+    useWaitForTransactionReceipt({ hash: withdrawTxHash });
 
   // Fetch Enso route and approval data
   useEffect(() => {
@@ -173,14 +181,12 @@ export default function WithdrawDialog({ isOpen, onClose, position }: any) {
   async function handleApprove() {
     if (!approval) return;
     try {
-      await writeContractAsync({
+      await writeApprovalAsync({
         address: approval.tx.to as Address,
         abi: erc20Abi,
         functionName: "approve",
         args: [approval.spender, BigInt(approval.amount)],
       });
-      setApprovalSuccess(true);
-      toast.success(`Approval successful. Click "Withdraw Tokens" to proceed.`);
     } catch (err: any) {
       if (err?.message?.includes("User rejected")) {
         console.log({ "user rejected approval": err });
@@ -194,18 +200,17 @@ export default function WithdrawDialog({ isOpen, onClose, position }: any) {
     if (!route) return;
     try {
       console.log("Executing withdraw transaction...");
-      await walletClient?.sendTransaction({
+      const hash = await walletClient?.sendTransaction({
         chain: undefined,
         account: fromAddress!,
         to: route.tx.to as Address,
         value: BigInt(route.tx.value),
         data: route.tx.data as `0x${string}`,
       });
-      setWithdrawSuccess(true);
-      toast.success(`Withdraw successful on ${chainId}.`);
-      console.log(`Withdraw successful on ${chainId}.`);
-      // close the dialog
-      onClose();
+      console.log("Withdraw transaction sent:", hash);
+      if (hash) {
+        setWithdrawTxHash(hash);
+      }
     } catch (err: any) {
       if (err?.message?.includes("User rejected")) {
         console.log("User rejected withdraw.");
@@ -215,10 +220,29 @@ export default function WithdrawDialog({ isOpen, onClose, position }: any) {
     }
   }
 
+  // useEffect to handle approval success
+  useEffect(() => {
+    if (isApprovalSuccess) {
+      setApprovalSuccess(true);
+      toast.success(`Approval successful. Click "Withdraw Tokens" to proceed.`);
+    }
+  }, [isApprovalSuccess]);
+
+  // useEffect to handle withdraw success
+  useEffect(() => {
+    if (isWithdrawSuccess) {
+      setWithdrawSuccess(true);
+      toast.success(`Withdraw successful on ${chainId}.`);
+      console.log(`Withdraw successful on ${chainId}.`);
+      onClose();
+    }
+  }, [isWithdrawSuccess, chainId, onClose]);
+
   const buttonText = (() => {
     if (aaveMarketLoading) return "Fetching market data…";
     if (loading) return "Fetching route…";
-    if (isWriting || isTxLoading) return "Processing…";
+    if (isApprovalPending || isApprovalLoading || isWithdrawLoading)
+      return "Processing…";
     if (!approvalSuccess) return "Approve Token";
     return "Withdraw Tokens";
   })();
@@ -227,7 +251,6 @@ export default function WithdrawDialog({ isOpen, onClose, position }: any) {
     if (!approvalSuccess) await handleApprove();
     else await handleWithdraw();
   };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="bg-zinc-950 border border-zinc-800 text-white max-w-md">
@@ -287,8 +310,9 @@ export default function WithdrawDialog({ isOpen, onClose, position }: any) {
             disabled={
               !amount ||
               loading ||
-              isWriting ||
-              isTxLoading ||
+              isApprovalPending ||
+              isApprovalLoading ||
+              isWithdrawLoading ||
               aaveMarketLoading
             }
             className="w-full bg-blue-600 hover:bg-blue-700 text-white"
