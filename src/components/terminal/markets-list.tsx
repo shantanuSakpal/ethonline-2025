@@ -64,7 +64,7 @@ export default function MarketsList() {
   useEffect(() => {
     async function fetchCompound() {
       try {
-        const compound = await getCompoundMarkets(true);
+        const compound = await getCompoundMarkets(false);
         setCompoundStats(compound);
         console.log("compound markets --- ", compound);
         setLoading(false);
