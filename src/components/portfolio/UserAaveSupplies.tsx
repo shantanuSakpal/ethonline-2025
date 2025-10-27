@@ -22,6 +22,13 @@ export default function UserAaveSupplies() {
     user: evmAddress(address),
   });
 
+  const handleRefresh = async () => {
+    // Wait a bit for the transaction to be indexed
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    // Trigger a page reload to refresh all portfolio data
+    window.location.reload();
+  };
+
   if (error) {
     //@ts-ignore
     return <p className="text-red-500 text-center mt-8">Error: {error.name}</p>;
@@ -143,6 +150,7 @@ export default function UserAaveSupplies() {
           isOpen={!!selectedPosition}
           onClose={() => setSelectedPosition(null)}
           position={selectedPosition}
+          onRefresh={handleRefresh}
         />
       )}
     </section>

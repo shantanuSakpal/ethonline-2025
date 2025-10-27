@@ -43,7 +43,12 @@ const erc20Abi = [
   },
 ];
 
-export default function WithdrawDialog({ isOpen, onClose, position }: any) {
+export default function WithdrawDialog({
+  isOpen,
+  onClose,
+  position,
+  onRefresh,
+}: any) {
   const { data: walletClient } = useWalletClient();
   const [amount, setAmount] = useState("");
   const [slippage, setSlippage] = useState("0.5");
@@ -235,8 +240,12 @@ export default function WithdrawDialog({ isOpen, onClose, position }: any) {
       toast.success(`Withdraw successful on ${chainId}.`);
       console.log(`Withdraw successful on ${chainId}.`);
       onClose();
+      // Refresh portfolio data
+      if (onRefresh) {
+        onRefresh();
+      }
     }
-  }, [isWithdrawSuccess, chainId, onClose]);
+  }, [isWithdrawSuccess, chainId, onClose, onRefresh]);
 
   const buttonText = (() => {
     if (aaveMarketLoading) return "Fetching market data…";
