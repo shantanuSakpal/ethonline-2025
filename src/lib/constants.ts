@@ -56,3 +56,14 @@ export const CHAIN_LOGO_URL: Record<number, string> = {
   56: "https://statics.aave.com/bnbchain.svg",
   534352: "https://statics.aave.com/scroll-network.svg",
 };
+
+// Morpho Vault Asset IDs
+export const MORPHO_ASSET_IDS = {
+  ETHEREUM_USDC: "78a15c5e-c0f6-4814-9e19-15b2308ef72e",
+  BASE_USDC: "0279e2d3-23b8-49e7-a0d5-e3d6be67181c",
+  POLYGON_USDC: "2a07ff31-b525-487d-9da7-859d3867282d",
+  ARBITRUM_USDC: "9ae20f59-9af7-4bc8-a13a-ee41c8d0fc59",
+  ETHEREUM_USDT: "3d71a5a2-e696-4c77-8279-ead810da5cca",
+} as const;
+
+export const MORPHO_GRAPHQL_ENDPOINT = "https://api.morpho.org/graphql";

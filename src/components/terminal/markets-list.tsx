@@ -21,7 +21,7 @@ import {
 import { summarizeAaveV3Market } from "@/lib/aave-v3/summarize-aave-v3-markets";
 import { SupplyMarketDialog } from "@/components/terminal/supply-dialog";
 import type { AaveV3Summary } from "@/lib/aave-v3/types";
-import { getCompoundMarkets } from "@/lib/compound-v3/get-compound-markets";
+import { getMorphoVaults } from "@/lib/morpho/get-morpho-vaults";
 
 type SortField =
   | "chainName"
@@ -40,13 +40,13 @@ const formatProtocolName = (name: string): string => {
 };
 
 export default function MarketsList() {
-  const [protocol, setProtocol] = useState<"Aave" | "Compound" | "All">("All");
+  const [protocol, setProtocol] = useState<"Aave" | "Morpho" | "All">("All");
   const [sortField, setSortField] = useState<SortField>("apy");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [markets, setMarkets] = useState<AaveV3Summary[]>([]);
-  const [compoundStats, setCompoundStats] = useState<AaveV3Summary[]>([]);
+  const [morphoStats, setMorphoStats] = useState<AaveV3Summary[]>([]);
   const [aaveLoading, setAaveLoading] = useState(true);
-  const [compoundLoading, setCompoundLoading] = useState(true);
+  const [morphoLoading, setMorphoLoading] = useState(true);
 
   const { data: rawMarkets, loading: marketsLoading } = useAaveMarkets({
     chainIds: AAVE_AND_AVAIL_SUPPORTED_CHAINS as ChainId[],
@@ -57,33 +57,38 @@ export default function MarketsList() {
   useEffect(() => {
     if (rawMarkets) {
       const summarized = summarizeAaveV3Market(rawMarkets);
-      setMarkets(summarized);
+      // Filter for Aave markets with TVL greater than 10 million USD
+      const MIN_AAVE_TVL = 10_000_000; // 10 million USD
+      const filtered = summarized.filter(
+        (market) => market.tvlUSD >= MIN_AAVE_TVL
+      );
+      setMarkets(filtered);
       setAaveLoading(false);
     }
   }, [rawMarkets]);
 
-  // fetch Compound markets
+  // fetch Morpho vaults
   useEffect(() => {
-    async function fetchCompound() {
+    async function fetchMorpho() {
       try {
-        const compound = await getCompoundMarkets(true);
-        setCompoundStats(compound);
-        console.log("compound markets --- ", compound);
-        setCompoundLoading(false);
+        const morpho = await getMorphoVaults(true);
+        setMorphoStats(morpho);
+        console.log("morpho vaults --- ", morpho);
+        setMorphoLoading(false);
       } catch (error) {
-        console.error("Failed to fetch Compound markets:", error);
-        setCompoundLoading(false);
+        console.error("Failed to fetch Morpho vaults:", error);
+        setMorphoLoading(false);
       }
     }
-    fetchCompound();
+    fetchMorpho();
   }, []);
 
   const displayData = useMemo(() => {
     let data: AaveV3Summary[] = [];
 
     if (protocol === "Aave") data = markets;
-    else if (protocol === "Compound") data = compoundStats;
-    else data = [...markets, ...compoundStats];
+    else if (protocol === "Morpho") data = morphoStats;
+    else data = [...markets, ...morphoStats];
 
     // apply filters
     data = data
@@ -111,7 +116,7 @@ export default function MarketsList() {
           return 0;
       }
     });
-  }, [protocol, markets, compoundStats, sortField, sortDirection]);
+  }, [protocol, markets, morphoStats, sortField, sortDirection]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field)
@@ -134,8 +139,8 @@ export default function MarketsList() {
     return [...filtered].sort((a, b) => b.apy - a.apy)[0];
   }, [markets]);
 
-  const topCompoundMarket = useMemo(() => {
-    const filtered = compoundStats
+  const topMorphoMarket = useMemo(() => {
+    const filtered = morphoStats
       .filter((m) => m.tvlUSD >= MIN_TVL)
       .filter((m) => m.apy >= MIN_APY)
       .filter(
@@ -143,7 +148,7 @@ export default function MarketsList() {
       );
     if (!filtered.length) return null;
     return [...filtered].sort((a, b) => b.apy - a.apy)[0];
-  }, [compoundStats]);
+  }, [morphoStats]);
 
   const renderTopYieldCard = (
     market: AaveV3Summary | null,
@@ -231,7 +236,7 @@ export default function MarketsList() {
       {/* Top Yield Cards */}
       <div className="flex flex-row md:flex-row gap-4 mb-6 ">
         {topAaveMarket && renderTopYieldCard(topAaveMarket, "Aave")}
-        {topCompoundMarket && renderTopYieldCard(topCompoundMarket, "Compound")}
+        {topMorphoMarket && renderTopYieldCard(topMorphoMarket, "Morpho")}
       </div>
 
       <Card className="border-theme-blue/30">
@@ -260,7 +265,7 @@ export default function MarketsList() {
               <Tabs
                 value={protocol}
                 onValueChange={(v) =>
-                  setProtocol(v as "Aave" | "Compound" | "All")
+                  setProtocol(v as "Aave" | "Morpho" | "All")
                 }
                 className="w-full cursor-pointer"
               >
@@ -271,8 +276,8 @@ export default function MarketsList() {
                   <TabsTrigger value="Aave" className="flex-1">
                     Aave
                   </TabsTrigger>
-                  <TabsTrigger value="Compound" className="flex-1">
-                    Compound
+                  <TabsTrigger value="Morpho" className="flex-1">
+                    Morpho
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -281,8 +286,8 @@ export default function MarketsList() {
 
           {/* Table */}
           {(protocol === "Aave" && aaveLoading) ||
-          (protocol === "Compound" && compoundLoading) ||
-          (protocol === "All" && aaveLoading && compoundLoading) ? (
+          (protocol === "Morpho" && morphoLoading) ||
+          (protocol === "All" && aaveLoading && morphoLoading) ? (
             <div className="px-4 py-6 text-center text-muted-foreground">
               <span className="inline-flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading markets...
