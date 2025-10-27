@@ -62,12 +62,8 @@ export default function MarketsList() {
   useEffect(() => {
     if (rawMarkets) {
       const summarized = summarizeAaveV3Market(rawMarkets);
-      // Filter for Aave markets with TVL greater than 10 million USD
-      const MIN_AAVE_TVL = 10_000_000; // 10 million USD
-      const filtered = summarized.filter(
-        (market) => market.tvlUSD >= MIN_AAVE_TVL
-      );
-      setMarkets(filtered);
+      console.log("aave markets --- ", summarized);
+      setMarkets(summarized);
       setAaveLoading(false);
     }
   }, [rawMarkets]);

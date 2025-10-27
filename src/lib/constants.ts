@@ -1,6 +1,6 @@
 import { SUPPORTED_CHAINS } from "@avail-project/nexus-widgets";
 
-export const MIN_TVL = 1000000; // 1 million USD
+export const MIN_TVL = 50000000; // 50M USD
 export const MIN_APY = 1; // 1%
 
 export const AAVE_AND_AVAIL_SUPPORTED_CHAINS = [
