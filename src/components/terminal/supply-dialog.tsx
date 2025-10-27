@@ -155,7 +155,20 @@ export function SupplyMarketDialog({ row }: Props) {
           )}
 
           {isConnected &&
-            !row.protocolName.toLowerCase().includes("morpho") && (
+            row.protocolName.toLowerCase().includes("compound") && (
+              <div className="w-full rounded-md border border-zinc-600 bg-zinc-800/50 p-6 text-center">
+                <p className="text-lg font-semibold text-theme-orange">
+                  Compound Deposits coming soon
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  We're working on adding Compound support
+                </p>
+              </div>
+            )}
+
+          {isConnected &&
+            !row.protocolName.toLowerCase().includes("morpho") &&
+            !row.protocolName.toLowerCase().includes("compound") && (
               <BridgeAndExecuteButton
                 className="w-full"
                 contractAddress={row.marketAddress}
