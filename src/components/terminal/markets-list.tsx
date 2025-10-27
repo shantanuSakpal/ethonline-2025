@@ -45,7 +45,8 @@ export default function MarketsList() {
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [markets, setMarkets] = useState<AaveV3Summary[]>([]);
   const [compoundStats, setCompoundStats] = useState<AaveV3Summary[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [aaveLoading, setAaveLoading] = useState(true);
+  const [compoundLoading, setCompoundLoading] = useState(true);
 
   const { data: rawMarkets, loading: marketsLoading } = useAaveMarkets({
     chainIds: AAVE_AND_AVAIL_SUPPORTED_CHAINS as ChainId[],
@@ -57,6 +58,7 @@ export default function MarketsList() {
     if (rawMarkets) {
       const summarized = summarizeAaveV3Market(rawMarkets);
       setMarkets(summarized);
+      setAaveLoading(false);
     }
   }, [rawMarkets]);
 
@@ -64,13 +66,13 @@ export default function MarketsList() {
   useEffect(() => {
     async function fetchCompound() {
       try {
-        const compound = await getCompoundMarkets(false);
+        const compound = await getCompoundMarkets(true);
         setCompoundStats(compound);
         console.log("compound markets --- ", compound);
-        setLoading(false);
+        setCompoundLoading(false);
       } catch (error) {
         console.error("Failed to fetch Compound markets:", error);
-        setLoading(false);
+        setCompoundLoading(false);
       }
     }
     fetchCompound();
@@ -278,7 +280,9 @@ export default function MarketsList() {
           </div>
 
           {/* Table */}
-          {loading ? (
+          {(protocol === "Aave" && aaveLoading) ||
+          (protocol === "Compound" && compoundLoading) ||
+          (protocol === "All" && aaveLoading && compoundLoading) ? (
             <div className="px-4 py-6 text-center text-muted-foreground">
               <span className="inline-flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading markets...

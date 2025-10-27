@@ -32,7 +32,7 @@ async function enrichMarketData(
 }
 
 export async function getCompoundMarkets(
-  useSmartContractData = false
+  useSmartContractData: boolean
 ): Promise<AaveV3Summary[]> {
   const markets = await fetchCompoundMarkets();
 
