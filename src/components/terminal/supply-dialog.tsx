@@ -143,69 +143,81 @@ export function SupplyMarketDialog({ row }: Props) {
         </div>
 
         <div className="w-full flex justify-center">
-          {isConnected && (
-            <BridgeAndExecuteButton
-              className="w-full"
-              contractAddress={row.marketAddress}
-              contractAbi={
-                [
-                  {
-                    inputs: [
-                      {
-                        internalType: "address",
-                        name: "asset",
-                        type: "address",
-                      },
-                      {
-                        internalType: "uint256",
-                        name: "amount",
-                        type: "uint256",
-                      },
-                      {
-                        internalType: "address",
-                        name: "onBehalfOf",
-                        type: "address",
-                      },
-                      {
-                        internalType: "uint16",
-                        name: "referralCode",
-                        type: "uint16",
-                      },
-                    ],
-                    name: "supply",
-                    outputs: [],
-                    stateMutability: "nonpayable",
-                    type: "function",
-                  },
-                ] as const
-              }
-              functionName="supply"
-              buildFunctionParams={(token, amount, _chainId, user) => {
-                const decimals = TOKEN_METADATA[token].decimals;
-                const amountWei = parseUnits(amount, decimals);
-                const tokenAddr = TOKEN_CONTRACT_ADDRESSES[token][_chainId];
-                return { functionParams: [tokenAddr, amountWei, user, 0] };
-              }}
-              prefill={{
-                toChainId: row.chainId as SUPPORTED_CHAINS_IDS,
-                token: row.supplyTokenSymbol as SUPPORTED_TOKENS,
-              }}
-            >
-              {({ onClick, isLoading }) => (
-                <Button
-                  onClick={() => widgetButtonClick(onClick)}
-                  disabled={isLoading || loading}
-                  className="w-full font-bold rounded-lg"
-                >
-                  {loading
-                    ? "Initializing..."
-                    : isLoading
-                    ? "Processing…"
-                    : "Bridge & Stake"}
-                </Button>
-              )}
-            </BridgeAndExecuteButton>
+          {isConnected && row.protocolName.toLowerCase().includes("morpho") && (
+            <div className="w-full rounded-md border border-zinc-600 bg-zinc-800/50 p-6 text-center">
+              <p className="text-lg font-semibold text-theme-orange">
+                Morpho Deposits coming soon
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                We're working on adding Morpho vault support
+              </p>
+            </div>
           )}
+
+          {isConnected &&
+            !row.protocolName.toLowerCase().includes("morpho") && (
+              <BridgeAndExecuteButton
+                className="w-full"
+                contractAddress={row.marketAddress}
+                contractAbi={
+                  [
+                    {
+                      inputs: [
+                        {
+                          internalType: "address",
+                          name: "asset",
+                          type: "address",
+                        },
+                        {
+                          internalType: "uint256",
+                          name: "amount",
+                          type: "uint256",
+                        },
+                        {
+                          internalType: "address",
+                          name: "onBehalfOf",
+                          type: "address",
+                        },
+                        {
+                          internalType: "uint16",
+                          name: "referralCode",
+                          type: "uint16",
+                        },
+                      ],
+                      name: "supply",
+                      outputs: [],
+                      stateMutability: "nonpayable",
+                      type: "function",
+                    },
+                  ] as const
+                }
+                functionName="supply"
+                buildFunctionParams={(token, amount, _chainId, user) => {
+                  const decimals = TOKEN_METADATA[token].decimals;
+                  const amountWei = parseUnits(amount, decimals);
+                  const tokenAddr = TOKEN_CONTRACT_ADDRESSES[token][_chainId];
+                  return { functionParams: [tokenAddr, amountWei, user, 0] };
+                }}
+                prefill={{
+                  toChainId: row.chainId as SUPPORTED_CHAINS_IDS,
+                  token: row.supplyTokenSymbol as SUPPORTED_TOKENS,
+                }}
+              >
+                {({ onClick, isLoading }) => (
+                  <Button
+                    onClick={() => widgetButtonClick(onClick)}
+                    disabled={isLoading || loading}
+                    className="w-full font-bold rounded-lg"
+                  >
+                    {loading
+                      ? "Initializing..."
+                      : isLoading
+                      ? "Processing…"
+                      : "Bridge & Stake"}
+                  </Button>
+                )}
+              </BridgeAndExecuteButton>
+            )}
 
           {isDisconnected && (
             <div className="text-center text-sm text-muted-foreground">
