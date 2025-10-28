@@ -106,8 +106,7 @@ export default function MarketsList() {
     if (protocol === "Aave") data = markets;
     else if (protocol === "Morpho") data = morphoStats;
     else if (protocol === "Compound") data = compoundStats;
-    else data = markets; // Show only Aave in "All" tab
-
+    else data = [...markets, ...morphoStats, ...compoundStats]; // all protocols merged
     // apply filters
     data = data
       .filter((m) => m.tvlUSD >= MIN_TVL)
