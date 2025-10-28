@@ -72,7 +72,11 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-3">
-            {isConnected ? <ViewUnifiedBalance /> : <WalletConnection />}
+            {isConnected && pathname !== "/" ? (
+              <ViewUnifiedBalance />
+            ) : (
+              <WalletConnection />
+            )}
           </div>
         </div>
       </div>
